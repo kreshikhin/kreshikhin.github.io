@@ -1,0 +1,240 @@
+<!DOCTYPE html><html lang="ru"><head><title>Denis Kreshikhin. Uploading video to Twitter with Go</title><meta charset="utf8"><meta name="description" content="Personal blog about an experience in software development and computer science"><meta name="keywords" content="programming languages, object oriented programming, functional programming, software design, haskell, rust, go, golang, ios, objective-c, swift"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="shortcut icon" type="image/png" href="../public/images/favicon.png"><link rel="stylesheet" type="text/css" href="../public/style.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-43835648-1', 'auto');
+ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>software development, computer science</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
+div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Uploading video to Twitter with Go</h1><p><p>The possibility of short video uploading in Twitter is provided by official API for almost a year. Of course Twitter also let to show video from Youtube or Vimeo before, but video uploaded in Twitter directly will be played on scrolling without any clicks or taps. That increases the attractiveness to users.</p>
+<h2 id="twitter-oauth">Twitter OAuth</h2>
+<p>First of all we need to register our application on Twitter and take <code>consumer_key</code> and <code>consumer_secret</code>. The key and secret are required for OAuth. We will use library <code>&quot;github.com/mrjones/oauth&quot;</code> for establishing a connection through OAuth.</p>
+<pre><code>consumerKey := <span class="hljs-string">&quot;YOUR_COSUMER_KEY&quot;</span>
+consumerSecret := <span class="hljs-string">&quot;YOUR_COSUMER_SECRET&quot;</span>
+
+c := oauth.NewConsumer(
+    consumerKey,
+    consumerSecret,
+    oauth.ServiceProvider{
+        RequestTokenUrl:   <span class="hljs-string">&quot;https://api.twitter.com/oauth/request_token&quot;</span>,
+        AuthorizeTokenUrl: <span class="hljs-string">&quot;https://api.twitter.com/oauth/authorize&quot;</span>,
+        AccessTokenUrl:    <span class="hljs-string">&quot;https://api.twitter.com/oauth/access_token&quot;</span>,
+    })
+
+c.Debug(<span class="hljs-literal">false</span>)</code></pre><p>Authorization of a user is required for video upload. So for process automation is useful to save authorization data from previous session in a file (e.g. <code>twitter.json</code>). In this case there aren&#39;t any necessity for make login in browser manually each time.</p>
+<pre><code>accessToken := ReadAccessToken(<span class="hljs-string">&quot;twitter.json&quot;</span>)
+
+<span class="hljs-keyword">if</span> accessToken == <span class="hljs-literal">nil</span> {
+    <span class="hljs-keyword">return</span>;
+
+    requestToken, u, err := c.GetRequestTokenAndUrl(<span class="hljs-string">&quot;oob&quot;</span>)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+
+    fmt.Println(<span class="hljs-string">&quot;(1) Go to: &quot;</span> + u)
+    fmt.Println(<span class="hljs-string">&quot;(2) Grant access, you should get back a verification code.&quot;</span>)
+    fmt.Println(<span class="hljs-string">&quot;(3) Enter that verification code here: &quot;</span>)
+
+    verificationCode := <span class="hljs-string">&quot;&quot;</span>
+    fmt.Scanln(&amp;verificationCode)
+
+    accessToken, err = c.AuthorizeToken(requestToken, verificationCode)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}
+
+client, err := c.MakeHttpClient(accessToken)
+<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+    <span class="hljs-built_in">panic</span>(err)
+}</code></pre><p>The variable <code>client</code> containing the token opens an access to Twitter API for us.</p>
+<p>##Upload video by Twitter API
+We can&#39;t attach a video directly to a message at moment of sending, because unique <code>media_id</code> is required for publication of the message in Twitter. We should take <code>media_id</code> before uploading the video by the next steps:</p>
+<ol>
+<li>Send length of the content and take <code>media_id</code></li>
+<li>Upload the content</li>
+<li>Finish content uploading by special request</li>
+<li>Send message with <code>media_id</code></li>
+</ol>
+<p>We will store URLs for requests in constants <code>StatusUpdate</code> and <code>MediaUpload</code>. The structure <code>Twitter</code> will store only reference to <code>http.Client</code>:</p>
+<pre><code>
+<span class="hljs-keyword">package</span> twitter
+
+<span class="hljs-keyword">const</span> StatusUpdate <span class="hljs-keyword">string</span> = <span class="hljs-string">&quot;https://api.twitter.com/1.1/statuses/update.json&quot;</span>
+<span class="hljs-keyword">const</span> MediaUpload <span class="hljs-keyword">string</span> = <span class="hljs-string">&quot;https://upload.twitter.com/1.1/media/upload.json&quot;</span>
+
+<span class="hljs-keyword">type</span> Twitter <span class="hljs-keyword">struct</span> {
+    client *http.Client
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewTwitter</span><span class="hljs-params">(client *http.Client)</span> *<span class="hljs-title">Twitter</span></span> {
+    self := &amp;Twitter{}
+    self.client = client
+    <span class="hljs-keyword">return</span> self
+}</code></pre><h3 id="initialization-and-taking-of-media_id">Initialization and taking of <code>media_id</code></h3>
+<p>At moment of initialization we should set two important parameters: <code>media_type</code> and <code>total_bytes</code>. The parameters should precisely to fit the content, because Twitter will use this parameters for check correctness of uploading. An inaccuracy in values of this parameters will result to denial of publication the content.</p>
+<p>It&#39;s also necessary to set the correct mime type in the header <code>application/x-www-form-urlencoded</code>:</p>
+<pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(self *Twitter)</span> <span class="hljs-title">MediaInit</span><span class="hljs-params">(media []<span class="hljs-keyword">byte</span>)</span> <span class="hljs-params">(*MediaInitResponse, error)</span></span> {
+    form := url.Values{}
+    form.Add(<span class="hljs-string">&quot;command&quot;</span>, <span class="hljs-string">&quot;INIT&quot;</span>)
+    form.Add(<span class="hljs-string">&quot;media_type&quot;</span>, <span class="hljs-string">&quot;video/mp4&quot;</span>)
+    form.Add(<span class="hljs-string">&quot;total_bytes&quot;</span>, fmt.Sprint(<span class="hljs-built_in">len</span>(media)))
+
+    fmt.Println(form.Encode())
+
+    req, err := http.NewRequest(<span class="hljs-string">&quot;POST&quot;</span>,
+        MediaUpload, strings.NewReader(form.Encode()))
+
+    req.Header.Add(<span class="hljs-string">&quot;Content-Type&quot;</span>, <span class="hljs-string">&quot;application/x-www-form-urlencoded&quot;</span>)
+
+    res, err := self.client.Do(req)
+
+    <span class="hljs-keyword">defer</span> res.Body.Close()
+    body, err := ioutil.ReadAll(res.Body)
+    fmt.Println(<span class="hljs-string">&quot;response&quot;</span>, <span class="hljs-keyword">string</span>(body))
+
+    <span class="hljs-keyword">var</span> mediaInitResponse MediaInitResponse
+    err = json.Unmarshal(body, &amp;mediaInitResponse)
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>, err
+    }
+
+    fmt.Println(<span class="hljs-string">&quot;Initialized media: &quot;</span>, mediaInitResponse);
+
+    <span class="hljs-keyword">return</span> &amp;mediaInitResponse, <span class="hljs-literal">nil</span>
+}</code></pre><h2 id="upload-of-content">Upload of content</h2>
+<p>After we take right response with <code>media_id</code>, which as a rule stores some big integer value, we can upload our content.
+It should be borne in mind, despite of limit in <code>15MB</code> we can&#39;t upload all video in one chunk.</p>
+<p>At first, Twitter will return error for chunks more <code>5MB</code>.
+At second, we can&#39;t show smooth changes in progress bar in case of uploading of a content by big chunks.</p>
+<p>So it will be optimally to split content on <code>500KB</code> chunks. The chunks can be uploaded in arbitrary order.</p>
+<pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(self *Twitter)</span> <span class="hljs-title">MediaAppend</span><span class="hljs-params">(mediaId <span class="hljs-keyword">uint64</span>, media []<span class="hljs-keyword">byte</span>)</span> <span class="hljs-title">error</span></span> {
+    step := <span class="hljs-number">500</span> * <span class="hljs-number">1024</span>
+    <span class="hljs-keyword">for</span> s := <span class="hljs-number">0</span>; s * step &lt; <span class="hljs-built_in">len</span>(media); s++ {
+        <span class="hljs-keyword">var</span> body bytes.Buffer
+        rangeBegining := s * step
+        rangeEnd := (s + <span class="hljs-number">1</span>) * step
+        <span class="hljs-keyword">if</span> rangeEnd &gt; <span class="hljs-built_in">len</span>(media) {
+            rangeEnd = <span class="hljs-built_in">len</span>(media)
+        }
+
+        fmt.Println(<span class="hljs-string">&quot;try to append &quot;</span>, rangeBegining, <span class="hljs-string">&quot;-&quot;</span>, rangeEnd)
+
+        w := multipart.NewWriter(&amp;body)
+
+        w.WriteField(<span class="hljs-string">&quot;command&quot;</span>, <span class="hljs-string">&quot;APPEND&quot;</span>)
+        w.WriteField(<span class="hljs-string">&quot;media_id&quot;</span>, fmt.Sprint(mediaId))
+        w.WriteField(<span class="hljs-string">&quot;segment_index&quot;</span>, fmt.Sprint(s))
+
+        fw, err := w.CreateFormFile(<span class="hljs-string">&quot;media&quot;</span>, <span class="hljs-string">&quot;example.mp4&quot;</span>)
+
+        fmt.Println(body.String())
+
+        n, err := fw.Write(media[rangeBegining:rangeEnd])
+
+        fmt.Println(<span class="hljs-string">&quot;len &quot;</span>, n)
+
+        w.Close()
+
+        req, err := http.NewRequest(<span class="hljs-string">&quot;POST&quot;</span>, MediaUpload, &amp;body)
+
+        req.Header.Add(<span class="hljs-string">&quot;Content-Type&quot;</span>, w.FormDataContentType())
+
+        res, err := self.client.Do(req)
+        <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+            <span class="hljs-keyword">return</span> err
+        }
+
+        resBody, err := ioutil.ReadAll(res.Body)
+        fmt.Println(<span class="hljs-string">&quot;append response &quot;</span>, <span class="hljs-keyword">string</span>(resBody))
+    }
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+}</code></pre><p>Note the line <code>req.Header.Add(&quot;Content-Type&quot;, w.FormDataContentType())</code>. It plays important role in upload, because it makes our request  <code>multipart</code>. Without this line Twitter will returns error of upload, because <code>multipart</code> body is required by server.</p>
+<h2 id="finalization-content-upload">Finalization content upload</h2>
+<p>After receiving a successful response on every chunk we should finalize upload process. As a rule if type of content of length of data were set incorrectly we take error on this step of upload (before sending our message):</p>
+<pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(self *Twitter)</span> <span class="hljs-title">MediaFinilize</span><span class="hljs-params">(mediaId <span class="hljs-keyword">uint64</span>)</span> <span class="hljs-title">error</span></span> {
+    form := url.Values{}
+    form.Add(<span class="hljs-string">&quot;command&quot;</span>, <span class="hljs-string">&quot;FINALIZE&quot;</span>)
+    form.Add(<span class="hljs-string">&quot;media_id&quot;</span>, fmt.Sprint(mediaId))
+
+    req, err := http.NewRequest(<span class="hljs-string">&quot;POST&quot;</span>,
+        MediaUpload, strings.NewReader(form.Encode()))
+
+    req.Header.Add(<span class="hljs-string">&quot;Content-Type&quot;</span>, <span class="hljs-string">&quot;application/x-www-form-urlencoded&quot;</span>)
+    res, err := self.client.Do(req)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> err
+    }
+
+    body, err := ioutil.ReadAll(res.Body)
+    fmt.Println(<span class="hljs-string">&quot;final response &quot;</span>, <span class="hljs-keyword">string</span>(body))
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+}</code></pre><h2 id="send-message-with-attached-media">Send message with attached media</h2>
+<p>Now we can set <code>media_id</code> as parameter in our message after successful upload.</p>
+<p>It should be borne in mind, the <code>media_id</code> should be set in field <code>media_ids</code> even for a video. It&#39;s can be single string e.g. <code>status=text&amp;media_ids=1234567890</code>.</p>
+<pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(self *Twitter)</span> <span class="hljs-title">UpdateStatusWithMedia</span><span class="hljs-params">(text <span class="hljs-keyword">string</span>, mediaId <span class="hljs-keyword">uint64</span>)</span> <span class="hljs-title">error</span></span> {
+    form := url.Values{}
+    form.Add(<span class="hljs-string">&quot;status&quot;</span>, text)
+    form.Add(<span class="hljs-string">&quot;media_ids&quot;</span>, fmt.Sprint(mediaId))
+
+    req, err := http.NewRequest(<span class="hljs-string">&quot;POST&quot;</span>,
+        StatusUpdate, strings.NewReader(form.Encode()))
+
+    req.Header.Add(<span class="hljs-string">&quot;Content-Type&quot;</span>, <span class="hljs-string">&quot;application/x-www-form-urlencoded&quot;</span>)
+    res, err := self.client.Do(req)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> err
+    }
+
+    body, err := ioutil.ReadAll(res.Body)
+    fmt.Println(<span class="hljs-string">&quot;status response &quot;</span>, <span class="hljs-keyword">string</span>(body))
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+}</code></pre><h2 id="what-if-nothing-works">What if nothing works?</h2>
+<ul>
+<li>Check a size of your video should be <code>&lt;15MB</code></li>
+<li>Check a type of your video is <code>mp4</code></li>
+<li>Check a duration of your video <code>&lt;30s</code></li>
+<li>Check width, height and resolution of your video are respond of Twitter requirements</li>
+<li>Try to upload your video through browser</li>
+<li>Try to upload your video through another browsers</li>
+</ul>
+<p>The requirements of Twitter for video are described here: <a href="https://dev.twitter.com/rest/public/uploading-media#videorecs">https://dev.twitter.com/rest/public/uploading-media#videorecs</a></p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Despite the difficulties, direct upload through official API is very good thing for developers.</p>
+<p>Source code:  <a href="https://github.com/kreshikhin/twitter-media-uploader">https://github.com/kreshikhin/twitter-media-uploader</a></p>
+<p>Official Twitter manual: <a href="https://dev.twitter.com/rest/reference/post/media/upload">https://dev.twitter.com/rest/reference/post/media/upload</a></p>
+</p></div></div><div id="disqus_thread"></div><script>/* * * CONFIGURATION VARIABLES * * */
+var disqus_shortname = 'kreshikhin';
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the<a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript></div><!-- Yandex.Metrika counter--><script>(function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter31572828 = new Ya.Metrika({
+                    id:31572828,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");</script><noscript><div><img src="https://mc.yandex.ru/watch/31572828" style="position:absolute; left:-9999px;" alt=""></div></noscript><!-- /Yandex.Metrika counter--></body></html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="ru"><head><title>Denis Kreshikhin. Sharing a code through social networks</title><meta charset="utf8"><meta name="description" content="Personal blog about an experience in software development and computer science"><meta name="keywords" content="programming languages, object oriented programming, functional programming, software design, haskell, rust, go, golang, ios, objective-c, swift"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="shortcut icon" type="image/png" href="../public/images/favicon.png"><link rel="stylesheet" type="text/css" href="../public/style.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-43835648-1', 'auto');
+ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>software development, computer science</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
+div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Sharing a code through social networks</h1><p><p>There is a problem with formatting code in social networks. If you pass a piece of code ass a message, as result, you&#39;ll see a corrupted code with smiles and wrong indents.</p>
+<p>This is an attempt to solve the problem by a web service <a href="//srclnk.ru"><img style="width: 16px; height: 16px; display: inline" src="../public/images/srclnk.png"> srclnk.ru</a> which created by me for transforming a piece of code to a link with an image.</p>
+<h1 id="code2image">code2image</h1>
+<p>At first, I&#39;ve written a small library <a href="//npmjs.com/package/code2image"><img style="width: 16px; height: 16px; display: inline" src="../public/images/npm.png"> code2image</a>] which allows to create an image based on a piece of code.</p>
+<pre><code><span class="hljs-keyword">var</span> code = <span class="hljs-string">&quot;var hello = &#x27;hello&#x27;;&quot;</span>
+
+<span class="hljs-keyword">var</span> styles = {}; <span class="hljs-comment">// all are default</span>
+
+code2image.render(code, <span class="hljs-string">&#x27;test.png&#x27;</span>, styles,
+    <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)</span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;ok!&#x27;</span>);
+});</code></pre><p>The result of execution:</p>
+<p><img src="http://srclnk.ru/zxetjr.png" alt="result"></p>
+<p>Main dependencies of the libary  is <code>hightlight-js</code> and <code>node-canvas</code>.</p>
+<p>Because <code>hightlight-js</code> recognize a code not very well I&#39;ve written also a library which uses Bayesian classifier <a href="//npmjs.com/package/tolmach"><img style="width: 16px; height: 16px; display: inline" src="../public/images/npm.png"> tolmach</a> implemented in <code>natural</code>. This approach works a little better.</p>
+<h1 id="srclnkru">srclnk.ru</h1>
+<p>The web service <a href="http://srclnk.ru"><img style="width: 16px; height: 16px; display: inline" src="../public/images/srclnk.png"> srclnk.ru</a> is lightweight wrapper of a library <a href="//npmjs.com/package/code2image"><img style="width: 16px; height: 16px; display: inline" src="../public/images/npm.png"> code2image</a> which allows to place a piece of code and take a image with formatted and highlighted code.
+This image can be posted in social networks as typical media message.</p>
+</p></div></div><div id="disqus_thread"></div><script>/* * * CONFIGURATION VARIABLES * * */
+var disqus_shortname = 'kreshikhin';
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the<a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript></div><!-- Yandex.Metrika counter--><script>(function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter31572828 = new Ya.Metrika({
+                    id:31572828,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");</script><noscript><div><img src="https://mc.yandex.ru/watch/31572828" style="position:absolute; left:-9999px;" alt=""></div></noscript><!-- /Yandex.Metrika counter--></body></html>
