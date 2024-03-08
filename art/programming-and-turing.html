@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="ru"><head><title>Denis Kreshikhin. Программирование, искусственный интеллект и тезис Тьюринга-Чёрча</title><meta charset="utf8"><meta name="description" content="Personal blog about an experience in software development and computer science"><meta name="keywords" content="programming languages, object oriented programming, functional programming, software design, haskell, rust, go, golang, ios, objective-c, swift"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="shortcut icon" type="image/png" href="../public/images/favicon.png"><link rel="stylesheet" type="text/css" href="../public/style.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-43835648-1', 'auto');
+ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>iOS-разработчик с 15+ летним опытом</h2><h2>Тимлид/сеньор по обстоятельствам</h2><h2>Интересы: swift, uikit, rxswift, oop/ood, devops, agile</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
+div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Программирование, искусственный интеллект и тезис Тьюринга-Чёрча</h1><p><p>Поучаствовал недавно в <a href="http://habrahabr.ru/company/parallels/blog/263409"><img style="width: 16px; display: inline" src="/images/xabr.png"> дискуссии на хабре</a> по поводу инженерности в программировании и будущего самого программирования. Конечно предсказывать будущее дело неблагодарное, тем не менее, что касается ценности программирования есть чёткие доводы, что в будущем это будет стольже актуально как и сейчас. Так же как и латинский алфавит подходит для письма не хуже чем 2к+ лет назад.</p>
+<p>##Программирование само по себе имеет ценность</p>
+<p>Начну с того, что называть программистов инженерами это либо троллинг, либо натуральное заблуждение вроде приравнивания индейцев к индийцам. (Да, Колумб считал что открыл Индию, а краснокожие люди это индийцы, но это очевидно не соответствует реальности.)</p>
+<p>Итак, Ларри Уолл по образованию лингвист, занимался исследованиями Библии и заодно придумал язык Perl. Джон Маккарти &mdash; математик и исследовал проблемы искусственного интеллекта, в итоге придумал LISP. Алан Кей занимался молекулярной биологией и подрабатывал джаз-музыкантом, но потом придумал SmallTalk и ООП. Ричард Столлман начинал тоже с биологии, потом получил бакалавра по физике, проучился год в MIT и забросил образование, перключившись на работу исключительно программистом. В итоге мир обрёл GNU.
+В конце&ndash;концов, Ада Байрон не была инженером, и вряд ли она представляла до конца как работает машина которая существовала только на бумаге и в голове Бэббиджа.</p>
+<p>Всё что объединяет этих людей это любовь к программированию, так что программирование это самодостаточная дисциплина. И то, что сейчас программистам приходится идти учиться на инженерные специальности это огромная ошибка. Но надо не забывать, что не только программисты столкнулись с такой проблемой. В начале XX-го века и профессия химика считалась чем-то связанным с мошенничеством, а химические факультеты на территории России начали открываться только в 30-е годы.</p>
+<p>Так и с программистами. Да, программист может быть инженером или его работа может требовать быть инженером. Но он может и не быть инженером. Более того программист который занимается исключительно программированием более ценен как специалист, точно так же как математик-тополог для топологии ценнее чем просто математик. Поэтому, можно быть программистом одного языка и вообще забить на низкоуровневое программирование, и всё равно это будет программированием. Например, многие библиотеки для javascript написаны на самом javascript и решают проблемы javascript с помощью абстракций javascript, но имеют при этом сотни тысяч скачиваний.</p>
+<p>Программирование само по себе ставит очень серьёзные задачи — чистота кода, управление поведением сущностей, развитие абстракций, проблемы семантики и синтаксиса. И это совершенно не инженерные проблемы. Мало кто готов оплачивать создание новых языков программирования, но новые языки имеют огромную ценность для всей отрасли в целом. Каждый язык это шаг в будущее, как новая планета для астрономов или новая частица для физиков-ядерщиков.</p>
+<p>##Программирование искусственного интеллекта будет таким же программированием</p>
+<p>Я встречал много рассуждений на тему того, что создание искусственного интеллекта сделают профессию программист ненужной. Я в этом отношении придерживаюсь совершенно противположной точки зрения. Если какие-то профессии и станут ненужными, то к профессии программист это будет иметь отношение в самую последнюю очередь. Т.к. всё современное программирование строится на тезисе Тьюринга-Чёрча о том что <em>любая вычислимая функция может быть рассчитана с помощью некоторого физического процесса</em>.</p>
+<p>Если тезис верен, то никакие искусственные интеллекты качественно ничего не изменят. Т.к. всякая задача в итоге будет сводиться к написанию программы, вне зависимости от предметной области. В 50-е программисты оперировали регистрами, в 60-е массивами, потом стали создавать структуры данных, теперь передают объекты и замыкания. Но принцип записи программ совершенно не изменился.</p>
+<p>Другое дело, если будут открыты какие-то физические процессы, которые будут производить <em>нетьюринговые</em> вычисления, тогда да. Возможно потребуются какие-то другие сущности. Но скорее всего это будет уже за гранью современной цивилизации.</p>
+<p>Другими словами, пока человечество будет писать алгоритмы для машин Тьюринга, человечество будет использовать и языки программирования. Могут изменятся грамматики, синтаксис, семантика. Но это всё равно будут языки, и они всегда будут представимы в виде текста. (Хотя по факту это могут быть какие-то блоки или схемы)</p>
+<p>Поэтому программирование останется в любом случае, вне зависимости от того что ждёт нас в будущем.</p>
+</p></div></div><div id="disqus_thread"></div><script>/* * * CONFIGURATION VARIABLES * * */
+var disqus_shortname = 'kreshikhin';
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the<a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript></div><!-- Yandex.Metrika counter--><script>(function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter31572828 = new Ya.Metrika({
+                    id:31572828,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");</script><noscript><div><img src="https://mc.yandex.ru/watch/31572828" style="position:absolute; left:-9999px;" alt=""></div></noscript><!-- /Yandex.Metrika counter--></body></html>

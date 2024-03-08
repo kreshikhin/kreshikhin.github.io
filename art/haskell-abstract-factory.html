@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="ru"><head><title>Denis Kreshikhin. Абстрактная фабрика на Haskell</title><meta charset="utf8"><meta name="description" content="Personal blog about an experience in software development and computer science"><meta name="keywords" content="programming languages, object oriented programming, functional programming, software design, haskell, rust, go, golang, ios, objective-c, swift"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="shortcut icon" type="image/png" href="../public/images/favicon.png"><link rel="stylesheet" type="text/css" href="../public/style.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-43835648-1', 'auto');
+ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>iOS-разработчик с 15+ летним опытом</h2><h2>Тимлид/сеньор по обстоятельствам</h2><h2>Интересы: swift, uikit, rxswift, oop/ood, devops, agile</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
+div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Абстрактная фабрика на Haskell</h1><p><p>К функциональным языкам программирования я уже давно испытываю неподдельный интерес, особенно к ML-семейству и в частности к Haskell. Пожалуй такой же трепет я испытываю только к LISP-языкам. Но к сожалению практических книг по созданию приложений на Haskell очень и очень мало, поэтому я решил разбираться самостоятельно. На данный момент сделал набросок реализации <em>абстрактной фабрики</em> на Haskell. Потом попробую реализовать и другие ООП-паттерны в таком же виде как я сделал это для Go при написании хабростатьи  <a href="http://habrahabr.ru/post/240917/"><img style="width: 16px; display: inline" src="/images/xabr.png"> Язык Go: реабилитация императивного программирования</a>.</p>
+<p>Работает это следующим образом. Определяется тип <code>AbstractProduct</code> и тип <code>AbstractFactory</code>, аналогично как абстрактные классы в мире ООП. Тип <code>AbstractFactory</code> имеет поля-функции вида <code>createProduct***</code>. Затем конкретная реализация фабрики создаётся путем присваивания этим полям конкетных функций, которые заполняют поля типа <code>AbstractProduct</code>.</p>
+<p>Main.hs
+—</p>
+<pre><code><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">AbstractProduct</span> = <span class="hljs-type">AbstractProduct</span>{
+    <span class="hljs-title">getNameOf</span> :: <span class="hljs-type">String</span>
+}</span>
+
+<span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">AbstractFactory</span> = <span class="hljs-type">AbstractFactory</span>{
+    <span class="hljs-title">createProductABy</span> :: <span class="hljs-type">AbstractProduct</span>,
+    <span class="hljs-title">createProductBBy</span> :: <span class="hljs-type">AbstractProduct</span>
+}</span>
+
+<span class="hljs-title">factory1</span> = <span class="hljs-type">AbstractFactory</span>{
+    createProductABy = <span class="hljs-type">AbstractProduct</span>{
+        getNameOf = <span class="hljs-string">&quot;ProductA1&quot;</span>
+    },
+    createProductBBy = <span class="hljs-type">AbstractProduct</span>{
+        getNameOf = <span class="hljs-string">&quot;ProductB1&quot;</span>
+    }
+}
+
+<span class="hljs-title">factory2</span> = <span class="hljs-type">AbstractFactory</span>{
+    createProductABy = <span class="hljs-type">AbstractProduct</span>{
+        getNameOf = <span class="hljs-string">&quot;ProductA2&quot;</span>
+    },
+    createProductBBy = <span class="hljs-type">AbstractProduct</span>{
+        getNameOf = <span class="hljs-string">&quot;ProductB2&quot;</span>
+    }
+}
+
+<span class="hljs-title">factory3</span> = factory1{
+    createProductABy = <span class="hljs-type">AbstractProduct</span>{
+        getNameOf = <span class="hljs-string">&quot;ProductB2&quot;</span>
+    }
+}
+
+<span class="hljs-title">main</span> = putStrLn (<span class="hljs-string">&quot;show &quot;</span> ++ (show $ getNameOf $ createProductABy $ factory3))</code></pre><p>Т.к. Haskell позволяет создавать копии переменной, перекрывая некоторые поля, то таким образом получается реализовать механизм близкий к наследованию. В листинге это продемонстрированно при создании <code>factory3</code> на основе <code>factory1</code>. Соответсвенно <code>factory3</code>, в отличии от други фабрик, будует создавать продукты &quot;ProductA1&quot; и &quot;ProductB2&quot;. Что соответсвует ООП-механизму перекрытию виртуальных функций в наследнике.</p>
+</p></div></div><div id="disqus_thread"></div><script>/* * * CONFIGURATION VARIABLES * * */
+var disqus_shortname = 'kreshikhin';
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the<a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript></div><!-- Yandex.Metrika counter--><script>(function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter31572828 = new Ya.Metrika({
+                    id:31572828,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");</script><noscript><div><img src="https://mc.yandex.ru/watch/31572828" style="position:absolute; left:-9999px;" alt=""></div></noscript><!-- /Yandex.Metrika counter--></body></html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="ru"><head><title>Denis Kreshikhin. Подключение c/c++ кода к haskell-проекту!</title><meta charset="utf8"><meta name="description" content="Personal blog about an experience in software development and computer science"><meta name="keywords" content="programming languages, object oriented programming, functional programming, software design, haskell, rust, go, golang, ios, objective-c, swift"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="shortcut icon" type="image/png" href="../public/images/favicon.png"><link rel="stylesheet" type="text/css" href="../public/style.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-43835648-1', 'auto');
+ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>iOS-разработчик с 15+ летним опытом</h2><h2>Тимлид/сеньор по обстоятельствам</h2><h2>Интересы: swift, uikit, rxswift, oop/ood, devops, agile</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
+div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Подключение c/c++ кода к haskell-проекту!</h1><p><p>Haskell один из быстроразвивающихся функциональных языков программирования. Возможно это один из тех функциональных языков которому вы хотите отдать предпочтение практического использования в ближайшее время.</p>
+<p>Эта статья для тех, кто хотел бы опробовать Haskell на деле, но имеет горы полезного C и C++ кода с которым требуется считаться.</p>
+<p>Переход на другой язык программирвания всегда сопряжён с желанием сохранить возможность свободного использования предыдущих наработок, библиотек и т.д. Для этих целей в Haskell есть библиотека Foreign.C которая реализует механизм интерфейса с функциями других языков (Foreign Function Interface — FFI).</p>
+<p>Рассмотрим подробнее как это происходит.</p>
+<h1 id="подключение-c-кода-через-foreignc">Подключение C-кода через Foreign.C</h1>
+<p>Пусть у нас есть некоторый исходный код:</p>
+<p>hello.h
+—</p>
+<pre><code>void hello(char* name);</code></pre><p>hello.c
+—</p>
+<pre><code><span class="hljs-meta">#include &quot;stdio.h&quot;</span>
+<span class="hljs-meta">#include &quot;hello.h&quot;</span>
+
+<span class="hljs-title">void</span> hello(char* name) {
+     printf(<span class="hljs-string">&quot;Hello %s!\n&quot;</span>, name);
+}</code></pre><p>Мы хотим что бы функция hello была доступна из некоторого модуля Hello следующим образом:</p>
+<p>Main.hs
+—</p>
+<pre><code><span class="hljs-keyword">module</span> Main <span class="hljs-keyword">where</span>
+<span class="hljs-keyword">import</span> Hello
+
+<span class="hljs-title">main</span> =
+    <span class="hljs-type">Hello</span>.hello <span class="hljs-string">&quot;World&quot;</span></code></pre><p>Для этого нужно:
+создать файл Hello.hs;
+подключить Haskell FFI через прагму {-# LANGUAGE ForeignFunctionInterface #-};
+добавить все необходимые модули из Foreign.C, в нашем случае это Foreign.C.String;
+описать сигнатуру нужных нам функций из файла-заголовка hello.h;
+обернуть при необходимости FFI-функции что бы избавиться от Foreign.C типов.</p>
+<p>После чего модуль Hello.hs должен выглядеть примерно так:</p>
+<p>Hello.hs
+—</p>
+<pre><code><span class="hljs-meta">{-# LANGUAGE ForeignFunctionInterface #-}</span>
+<span class="hljs-keyword">module</span> Hello <span class="hljs-keyword">where</span>
+<span class="hljs-keyword">import</span> Foreign.C
+<span class="hljs-keyword">import</span> Foreign.C.String
+
+<span class="hljs-keyword">foreign</span> <span class="hljs-keyword">import</span> <span class="hljs-keyword">ccall</span> <span class="hljs-string">&quot;hello&quot;</span> hello_ffi :: <span class="hljs-type">CString</span> -&gt; <span class="hljs-type">IO</span> ()
+
+<span class="hljs-title">hello</span> :: <span class="hljs-type">String</span> -&gt; <span class="hljs-type">IO</span> ()
+<span class="hljs-title">hello</span> name = hello_ffi =&lt;&lt; newCString name</code></pre><p>Теперь наш код готов. Обычно при компиляции GHC требуется только <code>*.hs</code> файлы. Если мы попробуем провернуть такую штуку с нашим проектом, то получим ошибку:</p>
+<pre><code>$ ghc -o main Main.hs Hello.hs
+Linking main ...
+Hello.o: In function `s11h_info&#x27;:
+(.text+0x8e): undefined reference to `hello&#x27;
+collect2: ld returned 1 exit status</code></pre><p>Что бы такого не происходило нужно внимательно следить — доступны ли все транслируемые единицы (либо их результирующие объектные файлы) для GHC:</p>
+<pre><code>$ ghc -o main Main.hs Hello.hs hello.c
+Linking main ...</code></pre><p>Окей, теперь можно проверить программу:</p>
+<pre><code>$ ./main Hello World!</code></pre><p>Итак, наш модуль сработал корректно — слово World было передано в нашу библиотеку, и выведено на экран через <code>printf</code>.</p>
+<p>Теперь как ответственные разработчики мы обязаны сделать <a href="http://www.haskell.org/cabal/">cabal-проект</a>.</p>
+<h1 id="добавление-c-исходников-в-cabal-проект">Добавление C-исходников в cabal-проект</h1>
+<p>Сначала сгенерируем стандартный проект командой:</p>
+<pre><code>$ cabal init</code></pre><p>Должно получиться что-то подобное:</p>
+<pre><code>name: hello-example
+version: 0.1.0.0
+synopsis: Example of cabal package with ffi
+build-type: Simple
+cabal-version: &gt;=1.8
+
+executable hello-example
+  main-is: Main.hs
+  build-depends: base ==4.5.*</code></pre><p>Теперь достаточно добавить c-sources: hello.c, т.е. получить:</p>
+<pre><code>name: hello-example
+version: 0.1.0.0
+synopsis: Example of cabal package with ffi
+build-type: Simple
+cabal-version: &gt;=1.8
+
+executable hello-example
+  main-is: Main.hs
+  c-sources: hello.c
+  build-depends: base ==4.5.*</code></pre><p>Можно проверить работоспособность cabal-пакета:</p>
+<pre><code>$ cabal configure $ cabal build $ cabal install</code></pre><p>Теперь наша программа должна быть всегда доступна из командной строки:</p>
+<pre><code>$ hello-example Hello World!</code></pre><h1 id="особенности-подключения-c-кода">Особенности подключения C++ кода</h1>
+<p>К сожалению, при обращении с C++ наши возможности ограничены той же библиотекой Foreign.C, поэтому проще всего приводить все интерфейсы к C-совместимому виду.
+Для примера заменим <code>hello.c</code> на <code>hello.cpp</code> реализованный через <code>iostream</code>:</p>
+<p>hello.cpp
+—</p>
+<pre><code><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;iostream&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&quot;hello.h&quot;</span></span>
+
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">hello</span><span class="hljs-params">(<span class="hljs-keyword">char</span>* name)</span> </span>{
+  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">&quot;Hello &quot;</span> &lt;&lt; name &lt;&lt; <span class="hljs-string">&quot;!&quot;</span> &lt;&lt; <span class="hljs-built_in">std</span>::<span class="hljs-built_in">endl</span>;
+ }</code></pre><p>Что бы получать корретные объектные файлы следует обрамлять экспортируемые функции extern-конструкцией:</p>
+<p>hello.h
+—</p>
+<pre><code><span class="hljs-meta">#<span class="hljs-meta-keyword">ifdef</span> __cplusplus</span>
+<span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> {
+<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
+  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">hello</span><span class="hljs-params">(<span class="hljs-keyword">char</span>* name)</span></span>;
+<span class="hljs-meta">#<span class="hljs-meta-keyword">ifdef</span> __cplusplus</span>
+}
+<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span></code></pre><p>Теперь если мы попробуем скомпилировать проект, то получим много-много однотипных ошибок:</p>
+<pre><code>$ ghc -o main Main.hs Hello.hs hello.cpp
+cc1plus: warning: command line option ‘-Wimplicit’
+ is valid for C/ObjC but not for C++ [enabled by default]
+Linking main ...
+hello.o: In function `hello&#x27;:
+hello.cpp:(.text+0xf): undefined reference to `std::cout&#x27;
+.........................................................
+collect2: ld returned 1 exit status</code></pre><p>Ошибки компоновки происходят из-за того что требуется явно указывать линковку со стандартной библиотекой, для gcc на linux обычно это библиотека -lstdc++.</p>
+<pre><code>$ ghc -o main Main.hs Hello.hs hello.cpp -lstdc++
+cc1plus: warning: command line option ‘-Wimplicit’
+ is valid for C/ObjC but not for C++ [enabled by default]
+Linking main ...</code></pre><p>После этого можно подготовить cabal-проект. Кроме указания c-source для C++ требуется указывать ещё и extra-libraries:</p>
+<pre><code>name: hello-example
+version: 0.1.0.0
+synopsis: Example of cabal package with ffi
+build-type: Simple
+cabal-version: &gt;=1.8
+
+executable hello-example
+  main-is: Main.hs
+  c-sources: hello.cpp
+  extra-libraries: stdc++
+  build-depends: base ==4.5.*</code></pre><p>Иногда даже при явном указании stdc++ <a href="http://www.haskell.org/pipermail/haskell-cafe/2010-December/087685.html">проблемы с линковкой</a> могут всё равно оставаться. В этом случае следует указывать ещё и --make опцию, несмотря на то что это избыточно (о чём вам и сообщит сборщик):</p>
+<pre><code>name: hello-example
+version: 0.1.0.0
+synopsis: Example of cabal package with ffi
+build-type: Simple
+cabal-version: &gt;=1.8
+
+executable hello-example
+  main-is: Main.hs
+  c-sources: hello.cpp
+  extra-libraries: stdc++
+  ghc-options: --make
+  build-depends: base ==4.5.*</code></pre><p>Остальную информацию об особенностях и тонкостях работы с Haskell FFI можно почерпнуть с этой <a href="http://www.haskell.org/haskellwiki/FFI">подборки ссылок</a>.</p>
+</p></div></div><div id="disqus_thread"></div><script>/* * * CONFIGURATION VARIABLES * * */
+var disqus_shortname = 'kreshikhin';
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the<a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript></div><!-- Yandex.Metrika counter--><script>(function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter31572828 = new Ya.Metrika({
+                    id:31572828,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");</script><noscript><div><img src="https://mc.yandex.ru/watch/31572828" style="position:absolute; left:-9999px;" alt=""></div></noscript><!-- /Yandex.Metrika counter--></body></html>

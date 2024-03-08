@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="ru"><head><title>Denis Kreshikhin. Адаптер интерфейса в Go</title><meta charset="utf8"><meta name="description" content="Personal blog about an experience in software development and computer science"><meta name="keywords" content="programming languages, object oriented programming, functional programming, software design, haskell, rust, go, golang, ios, objective-c, swift"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="shortcut icon" type="image/png" href="../public/images/favicon.png"><link rel="stylesheet" type="text/css" href="../public/style.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-43835648-1', 'auto');
+ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>iOS-разработчик с 15+ летним опытом</h2><h2>Тимлид/сеньор по обстоятельствам</h2><h2>Интересы: swift, uikit, rxswift, oop/ood, devops, agile</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
+div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Адаптер интерфейса в Go</h1><p><p>Так получилось, что в Go нет общепринятого подхода для написания обобщенных алгоритмов, типа темплейтов на которых строится STL в C++. Видимо, поэтому алгоритмические возможности стандартной библиотеки Go довольно ограничены. Для того что бы к коллекции применить какой-то алгоритм обычно требуется определять некоторый интерфейс, например, как это происходит при использовании сортировки <code>sort.Sort</code> из стандартной библиотеки. На примере этого интерфейса <code>sort.Interface</code> можно создать структуру-адаптер которая позволит применять функцию без явного определения новых методов.</p>
+<p>##Стандартный путь</p>
+<p>Давайте рассмотрим некоторый тип, <code>User</code> у которого определены два поля - имя и баланс:</p>
+<pre><code><span class="hljs-keyword">type</span> User <span class="hljs-keyword">struct</span>{
+    Name <span class="hljs-keyword">string</span>
+    Balance <span class="hljs-keyword">float32</span>
+}</code></pre><p>Допустим у нас есть некоторый массив с пользователями, и нам нужно отстортировать его по количеству денег на балансе. Это должно выглядеть примерно так:</p>
+<pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span>{
+    users := Users{{<span class="hljs-string">&quot;Петя&quot;</span>, <span class="hljs-number">100</span>}, {<span class="hljs-string">&quot;Коля&quot;</span>, <span class="hljs-number">50</span>},
+        {<span class="hljs-string">&quot;Катя&quot;</span>, <span class="hljs-number">900</span>}, {<span class="hljs-string">&quot;Маша&quot;</span>, <span class="hljs-number">200</span>}, {<span class="hljs-string">&quot;Вася&quot;</span>, <span class="hljs-number">400</span>}}
+    sort.Sort(users)
+
+    fmt.Println(users)
+}</code></pre><p>К сожалению, т.к. в Go отсутсвует параметрический полиморфизм, который позволил бы адаптировать сортировку к нашему типу, то единственный путь писать обобщенные функции без использования рефлексии это потребовать определения некоторого интерфейса, который бы предоставил быстрый доступ к данным. Именно таким путем пошли разработчики библиотеки <code>sort</code>,  т.к. для того что бы наша программа скомпилировалась требуется определить интерфейс <code>sort.Interface</code>.</p>
+<pre><code><span class="hljs-keyword">type</span> Interface <span class="hljs-keyword">interface</span> {
+    Len() <span class="hljs-keyword">int</span>
+    Less(i, j <span class="hljs-keyword">int</span>) <span class="hljs-keyword">bool</span>
+    Swap(i, j <span class="hljs-keyword">int</span>)
+}</code></pre><p>Т.к. в Go нельзя задать методы для композитного типа, вроде []User, то заодно следует определить и новый тип, коллекцию <code>Users</code>:</p>
+<pre><code>
+<span class="hljs-keyword">type</span> Users []User
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(users Users)</span> <span class="hljs-title">Len</span><span class="hljs-params">()</span> <span class="hljs-title">int</span></span> {
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">len</span>(users)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(users Users)</span> <span class="hljs-title">Less</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span> {
+    <span class="hljs-keyword">return</span> users[i].Balance &lt; users[j].Balance
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(users Users)</span> <span class="hljs-title">Swap</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span></span> {
+   users[i], users[j] = users[j], users[i]
+}
+</code></pre><p>Итак, описав, три метода <code>Len, Less</code> и <code>Swap</code> мы получили корректную сортировку:</p>
+<pre><code><span class="hljs-variable">$go</span> run main.go
+
+[{Коля 50} {Петя 100} {Маша 200} {Вася 400} {Катя 900}]</code></pre><p>(Код примера можно найти здесь <a href="https://play.golang.org/p/_7Ip7E9ZJ6">https://play.golang.org/p/_7Ip7E9ZJ6</a>)</p>
+<p>##Адаптер интерфейса</p>
+<p>Теперь допустим что в структуре <code>User</code> появилось новое поле <code>MonthOutlay</code> которое указывает на траты пользователя за последний месяц. И мы хотим отобрать пользователей которые тратят больше всего денег.</p>
+<pre><code><span class="hljs-keyword">type</span> User <span class="hljs-keyword">struct</span>{
+    Name <span class="hljs-keyword">string</span>
+    Balance <span class="hljs-keyword">float32</span>
+    MonthOutlay <span class="hljs-keyword">float32</span>
+}</code></pre><p>Очевидно, что методы <code>Len, Less</code> и <code>Swap</code> описанные для сортировки по балансу уже не подходят для сортировки по новому полю. Если следовать стандартному подходу, то нам следует определить новый тип, например, <code>OutlayUsers</code> с новыми методами.</p>
+<p>Т.к. создавать новый тип, каждый раз когда требуется отсортировать коллекцию по некоторому признаку является не очень практичным решением, то следовало бы поискать другой путь.</p>
+<p>Одним из решением проблемы является создание структуры-адаптера для интерфейса <code>sort.Interface</code>, назовем эту структуру <code>SortAdapter</code>:</p>
+<pre><code><span class="hljs-keyword">type</span> SortAdapter <span class="hljs-keyword">struct</span> {
+    <span class="hljs-built_in">len</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span> <span class="hljs-title">int</span></span>
+    less <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span>
+    swap <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span></span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(s SortAdapter)</span> <span class="hljs-title">Len</span><span class="hljs-params">()</span> <span class="hljs-title">int</span></span>{
+    <span class="hljs-keyword">return</span> s.<span class="hljs-built_in">len</span>()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(s SortAdapter)</span> <span class="hljs-title">Less</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span>{
+    <span class="hljs-keyword">return</span> s.less(i, j)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(s SortAdapter)</span> <span class="hljs-title">Swap</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span></span> {
+    s.swap(i, j)
+}</code></pre><p>Как видно из определение структуры, она хранит в себе функции которые необходимы для сортировки и выдает их за свои собственные методы.
+Теперь для того что бы передать объект в функцию <code>sort.Sort</code> вовсе не обязательно создавать новый тип и описывать методы, достаточно инстанцировать структуру с соответсвующими прямо в момент вызова:</p>
+<pre><code>sort.Sort(SortAdapter{<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span> <span class="hljs-title">int</span></span> {
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">len</span>(users)
+}, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span> {
+    <span class="hljs-keyword">return</span> users[i].Balance &lt; users[j].Balance
+}, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span></span> {
+    users[i], users[j] = users[j], users[i]
+}})
+
+fmt.Println(<span class="hljs-string">&quot;Sorted by balance: \n&quot;</span>, users)
+
+sort.Sort(SortAdapter{<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span> <span class="hljs-title">int</span></span> {
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">len</span>(users)
+}, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span> {
+    <span class="hljs-keyword">return</span> users[i].MonthOutlay &lt; users[j].MonthOutlay
+}, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span></span> {
+    users[i], users[j] = users[j], users[i]
+}})
+
+fmt.Println(<span class="hljs-string">&quot;Sorted by month outlay: \n&quot;</span>, users)
+</code></pre><p>Результат:</p>
+<pre><code>Sorted by balance:
+[{Коля 50 2000} {Петя 100 1000} {Маша 200 0} {Вася 400 700} {Катя 900 500}]
+
+Sorted by month outlay:
+[{Маша 200 0} {Катя 900 500} {Вася 400 700} {Петя 100 1000} {Коля 50 2000}]</code></pre><p>(Исходный код примера лежит здесь <a href="https://play.golang.org/p/EJ1s-tBweX">https://play.golang.org/p/EJ1s-tBweX</a>)</p>
+<p>Итак, адаптер интерфейса позволяет обращаться к функциям с произвольным интерфейсом без создания новых структур удовлетворящих этому интерфейсу. Другими словами, SortAdapter можно исопльзовать с любой коллекцией, если существует возможность определить функции <code>len, less, swap</code>.</p>
+<p>##Смешанный подход</p>
+<p>Итак, имея адаптер интерфейса <code>SortAdapter</code> мы можем подготовить любую коллекцию для передачи в функцию <code>sort.Sort</code>. С другой стороны, если мы работает только с одной коллекцией, но разными признаками сортировки, то мы можем определить новую структуру-адаптер, которая уже не требует указания функций <code>len</code> и <code>swap</code> т.к. для коллекций одного типа эти функции одинаковы:</p>
+<pre><code>
+<span class="hljs-keyword">type</span> UserSortAdapter <span class="hljs-keyword">struct</span> {
+    Users []User
+    less <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(s UserSortAdapter)</span> <span class="hljs-title">Len</span><span class="hljs-params">()</span> <span class="hljs-title">int</span></span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">len</span>(s.Users)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(s UserSortAdapter)</span> <span class="hljs-title">Less</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span>{
+    <span class="hljs-keyword">return</span> s.less(i, j)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(s UserSortAdapter)</span> <span class="hljs-title">Swap</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span></span> {
+    s.Users[i], s.Users[j] = s.Users[j], s.Users[i]
+}
+</code></pre><p>Как видно из кода, теперь только метод <code>Less</code> определяется динамически, методы <code>Len</code> и <code>Swap</code> работаю с коллекцией напрямую, это позволяет упростить вызов метода <code>sort.Sort</code>:</p>
+<pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    users := []User{{<span class="hljs-string">&quot;Петя&quot;</span>, <span class="hljs-number">100</span>, <span class="hljs-number">1000</span>}, {<span class="hljs-string">&quot;Коля&quot;</span>, <span class="hljs-number">50</span>, <span class="hljs-number">2000</span>},
+        {<span class="hljs-string">&quot;Катя&quot;</span>, <span class="hljs-number">900</span>, <span class="hljs-number">500</span>}, {<span class="hljs-string">&quot;Маша&quot;</span>, <span class="hljs-number">200</span>, <span class="hljs-number">0</span>}, {<span class="hljs-string">&quot;Вася&quot;</span>, <span class="hljs-number">400</span>, <span class="hljs-number">700</span>}}
+
+    sort.Sort(UserSortAdapter{users, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span> {
+            <span class="hljs-keyword">return</span> users[i].Balance &lt; users[j].Balance
+    }})
+
+    fmt.Println(<span class="hljs-string">&quot;Sorted by balance:\n&quot;</span>, users)
+
+    sort.Sort(UserSortAdapter{users, <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(i, j <span class="hljs-keyword">int</span>)</span> <span class="hljs-title">bool</span></span> {
+            <span class="hljs-keyword">return</span> users[i].MonthOutlay &lt; users[j].MonthOutlay
+    }})
+
+    fmt.Println(<span class="hljs-string">&quot;Sorted by month outlay:\n&quot;</span>, users)
+}</code></pre><p>Результат ничем не отличается от &quot;стандартного подхода&quot;:</p>
+<pre><code>Sorted by balance:
+ [{Коля 50 2000} {Петя 100 1000} {Маша 200 0} {Вася 400 700} {Катя 900 500}]
+Sorted by month outlay:
+ [{Маша 200 0} {Катя 900 500} {Вася 400 700} {Петя 100 1000} {Коля 50 2000}]</code></pre><p>(Исходный код примера лежит здесь <a href="https://play.golang.org/p/gMywPseLKA">https://play.golang.org/p/gMywPseLKA</a>)</p>
+<p>##Заключение</p>
+<p>Итак, адаптер интерфейса позволяет динамически сконстрируровать объект удволетворящий требуемому интерфейсу из объекта с произвольным набором методов за счет подмена методов на функции хранящиеся как поля структуры.</p>
+<p>Такие адаптеры полезно создавать в следующих случаях:</p>
+<ul>
+<li><p>При проектировании функций реализующих обобщенную работу с данными, т.к. адаптер интерфейса позволяет пользователям не плодить новые типы и методы при обращение к таким функциям.</p>
+</li>
+<li><p>При создании однотипных структур, которые будут обращаться к функциям со специфичным интерфейсом. Что бы не создавать новые типы и методы для каждой структуры.</p>
+</li>
+<li><p>Для того что бы производить &quot;настройку&quot; объекта для передачи в функцию без создания нового типа, который бы менял поведение методов предоставляющих доступе к его данным.</p>
+</li>
+</ul>
+</p></div></div><div id="disqus_thread"></div><script>/* * * CONFIGURATION VARIABLES * * */
+var disqus_shortname = 'kreshikhin';
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the<a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript></div><!-- Yandex.Metrika counter--><script>(function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter31572828 = new Ya.Metrika({
+                    id:31572828,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");</script><noscript><div><img src="https://mc.yandex.ru/watch/31572828" style="position:absolute; left:-9999px;" alt=""></div></noscript><!-- /Yandex.Metrika counter--></body></html>

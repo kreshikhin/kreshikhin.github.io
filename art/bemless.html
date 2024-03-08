@@ -1,0 +1,806 @@
+<!DOCTYPE html><html lang="ru"><head><title>Denis Kreshikhin. Хорошие верстальщики отправляются на небеса, а плохие куда захотят. Или — почему БЭМ не приносит счастья?</title><meta charset="utf8"><meta name="description" content="Personal blog about an experience in software development and computer science"><meta name="keywords" content="programming languages, object oriented programming, functional programming, software design, haskell, rust, go, golang, ios, objective-c, swift"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="shortcut icon" type="image/png" href="../public/images/favicon.png"><link rel="stylesheet" type="text/css" href="../public/style.css"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-43835648-1', 'auto');
+ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>iOS-разработчик с 15+ летним опытом</h2><h2>Тимлид/сеньор по обстоятельствам</h2><h2>Интересы: swift, uikit, rxswift, oop/ood, devops, agile</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
+div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Хорошие верстальщики отправляются на небеса, а плохие куда захотят. Или — почему БЭМ не приносит счастья?</h1><p><p>Все мы привыкли слышать поучительные разговоры о том &quot;как надо верстать&quot;, или о том &quot;как не надо&quot;. Иногда понятие &quot;как надо&quot; строится на объективных фактах, иногда на фактах которые скрыты где-то в глубине проблемы. Всё вместе это образует некоторые <i>правила вёрстки</i>, которыми и руководствуется верстальщик в своей повседневной работе.</p>
+<p>Первоначально правила вёрстки были сродни искусству - ты мог делать что угодно, и никто тебя не останавливал, кроме возможностей веб-браузеров естественно. Потом эти правила превратились в что-то вроде хороших советов для домохозяек. Ты прибегал к тому или иному совету раз от раза, просто что бы сделать свою работу более интересной, почувствовать себя переоткрывателем чего-то. Но это было не обязательно. Вообще это был довольно длительный период веба, но и всё-таки ему настал конец. Появился тренд на догматизацию, свободы становилось всё меньше и меньше - и в какой-то момент появился БЭМ .</p>
+<h1 id="вёрстка-должна-быть-увлекательной">Вёрстка должна быть увлекательной</h1>
+<p>Эту статью мне захотелось написать, после ознакомления со статьёй <a href='http://habrahabr.ru/post/203440/'>«Верстка для самых маленьких. Верстаем страницу по БЭМу»</a>.</p>
+<p>Сразу оговорюсь, что цель моей статьи не научить «верстать правильно», хотя большая часть посвящена именно вёрстке, а дать верстальщикам, разработчикам, дизайнерам и руководителям немного другой взгляд на проблему вёрстки и вообще программирования UI для современного веба.</p>
+<p>Начну с того, что являюсь приверженцем тех взглядов, что главное в командной раработке это максимально возможная свобода действий каждого участника разработки. Члены команды не должны чувствовать себя связаны каким-то методологиями, догмами и другими религиозными взглядами. Всё это очень сильно вредит мотивации, которая и является единственным двигателем проекта. По сути руководствуясь только своей мотивацией matz сделал Ruby, Резинг jQuery, а сэр Тим Бернерс-Ли HTML – как мы видим эти проекты до сих играют немаловажную роль в вебе.</p>
+<p>Как же повысить мотивацию и развязать руки тем кто работает с фронтендом в веб-проекте и при этом не снизить качество разработки?</p>
+<p>Ответ довольно прост – всего этого можно легко добиться делая ставку на современные технологии и тенденции в мировом вебе.</p>
+<h1 id="отказ-от-html-в-пользу-hamlslimjade-делает-вёрстку-проще-и-выразительней">Отказ от HTML в пользу haml/slim/jade делает вёрстку проще и выразительней</h1>
+<p>Несмотря на то что HTML создавался для облегчения вёрстки и в 1980-е был самым что ни на есть высокоуровневым языком, сейчас ситуация полностью противоположная. HTML стал слишком сложным и специфичным, смысл верстать в HTML такой же, как программировать в машинных кодах, когда под рукой ассемблер.</p>
+<p>К тому же в HTML как наследнике SGML изрядно извращена сама идея GML. Для этого можно сравнить примеры вёрстки на GML/HTML/slim.</p>
+<p>GML-script, 1969 год.</p>
+<pre><code>:h1.Chapter 1:  Introduction
+:p.GML supported hierarchical containers, such as
+:ol
+:li.Ordered lists (like this one),
+:li.Unordered lists, and
+:li.Definition lists
+:eol.
+as well as simple structures.
+:p.Markup minimization (later generalized and formalized in SGML),
+allowed the end-tags to be omitted for the &quot;h1&quot; and &quot;p&quot; elements.</code></pre><p>Современный HTML</p>
+<pre><code><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span> Chapter 1: Intruduction <span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">ol</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span> Ordered lists (like this one),
+   <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span> Unordered lists, and
+   <span class="hljs-tag">&lt;<span class="hljs-name">li</span>&gt;</span> Definition lists
+<span class="hljs-tag">&lt;/<span class="hljs-name">ol</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>as well as simple structures.<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Markup minimization (later generalized and formalized in SGML),
+   allowed the end-tags to be omitted for the &quot;h1&quot; and &quot;p&quot; elements
+<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></code></pre><p>Ruby Slim, 2011</p>
+<pre><code>h1 Chapter 1: Intruduction
+ol
+   li Ordered lists (like this one),
+   li Unordered lists, and
+   li Definition lists
+p as well as simple structures.
+p Markup minimization (later generalized and formalized in SGML),
+   allowed the end-tags to be omitted for the &quot;h1&quot; and &quot;p&quot; elements</code></pre><p>Как видим slim больше соответствует первоначальной идеи GML чем современный HTML.
+Так что использование современных шаблонизаторов делает код читабельнее и лаконичнее, он одинаково понятен и верстальщику и программисту. В нём легко выделить семантику.
+Более того, многие шаблонизаторы поддерживают включения и нативного HTML-кода, так что есть возможность делать гибридные шаблоны, особенно если в проекте много унаследованной вёрстки.</p>
+<h1 id="вёрстка-является-частью-экосистемы-проекта-нет-смысла-её-отделять">Вёрстка является частью экосистемы проекта, нет смысла её отделять</h1>
+<p>Руководители и заказчики частенько желают видеть результаты вёрстки в отдельных html-файлах. Вёрстка сразу в рабочем проекте кажется им надувательством. Поэтому верстальщики вынуждены копи-пастить десятки раз layout из одного файла в другой что бы получить постраничный html-прототип проекта. Такой подход приводит к тому что в вёрстке содержится куча ошибок в разных файлах и эти ошибки приходится исправлять программистам.</p>
+<p>Вёрстка неотделима от проекта. Точно так же как контроллеры неотделимы от видов. Нельзя взять и папочку views из одного проекта и перекинуть в другой, так что бы всё заработало. Поэтому не стоит питать иллюзий и насчёт вёрстки.</p>
+<h1 id="отказ-от-css-в-пользу-lesssass-развязывает-руки">Отказ от CSS в пользу LESS/SASS развязывает руки</h1>
+<p>В CSS заложены довольно строгие ограничения, в частности в нативном CSS нельзя осуществить манипуляции, которые в программировании называют наследованием. Т.е. один класс не может наследовать свойства другого класса, единственный способ распространить один и тот же стиль для разных элементов это создать общий селектор. Так что при программировании стилей всегда приходится выбирать между общностью селекторов и изолированностью стиля.
+К частью в LESS легко решает проблемы за счёт гибкой системы mixin-ов.</p>
+<p>Приведу небольшой пример.
+Пусть в проекте есть несколько классов элементов одного цвета с одинаковым шрифтом, но при этом имеющие разную семантику и расположенные в разных частях страницы:</p>
+<pre><code><span class="hljs-comment">/* однотипные классы */</span>
+<span class="hljs-selector-class">.button</span>{
+    <span class="hljs-attribute">background-color</span>: blue;
+    <span class="hljs-attribute">color</span>: white;
+    <span class="hljs-attribute">font-family</span>: Arial;
+    <span class="hljs-attribute">font-size</span>: <span class="hljs-number">12px</span>;
+}
+<span class="hljs-selector-class">.header</span>{
+    <span class="hljs-attribute">background-color</span>: blue;
+    <span class="hljs-attribute">color</span>: white;
+    <span class="hljs-attribute">font-family</span>: Arial;
+    <span class="hljs-attribute">font-size</span>: <span class="hljs-number">12px</span>;
+}
+<span class="hljs-selector-class">.footer</span>{
+    <span class="hljs-attribute">background-color</span>: blue;
+    <span class="hljs-attribute">color</span>: white;
+    <span class="hljs-attribute">font-family</span>: Arial;
+    <span class="hljs-attribute">font-size</span>: <span class="hljs-number">12px</span>;
+}</code></pre><p>В LESS можно просто выделить mixin с названием blue-arial-element;</p>
+<pre><code><span class="hljs-selector-tag">blue-arial-element</span>{
+    <span class="hljs-comment">// в less можно делать строчные комментарии</span>
+    <span class="hljs-comment">// поэтому property желательно писать «в столбик»</span>
+    <span class="hljs-comment">// background-color: black;</span>
+    <span class="hljs-attribute">background-color</span>: blue;
+    <span class="hljs-attribute">color</span>: white;
+    <span class="hljs-attribute">font-family</span>: Arial;
+    <span class="hljs-attribute">font-size</span>: <span class="hljs-number">12px</span>;
+}
+
+<span class="hljs-selector-class">.button</span>{
+    <span class="hljs-selector-class">.blue-arial-element</span>;
+}
+<span class="hljs-selector-class">.header</span>{
+    <span class="hljs-selector-class">.blue-arial-element</span>;
+}
+<span class="hljs-selector-class">.footer</span>{
+    <span class="hljs-selector-class">.blue-arial-element</span>;
+}</code></pre><p>Более того, этот mixin несмотря на то что и выглядит как класс, не будет засвечен в HTML-коде. Так что если наступит время когда от него придётся избавиться, его можно будет удалить из styles.less без изменения кода HTML. В классическом же решении, классы приходится выковыривать из всех мест где они появляются.</p>
+<p>Из таких mixin-ов можно (и нужно) сооружать целые библиотеки стилей, которые позволяют легко переносить стили из одного проекта в другой.</p>
+<h1 id="понимание-того-что-ты-делаешь-важнее-того-как-ты-это-делаешь">Понимание того что ты делаешь, важнее того как ты это делаешь</h1>
+<p>Можно ли сходу сказать что происходит в этом html-коде?</p>
+<pre><code><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__header&quot;</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">b-item-head__img</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">img</span>  <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/sq.png&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__text&quot;</span>&gt;</span>ABOUT WHITESQUARE<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__content&quot;</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__text&quot;</span>&gt;</span>
+                    In ultricies pellentesque massa a porta. Aliquam
+                    ipsum enim, hendrerit ut porta nec, ullamcorper et
+                    nulla. In eget mi dui, sit amet scelerisque nunc.
+                    Aenean augue arcu, convallis ac vulputate vitae, mollis
+                    non lectus. Donec hendrerit lacus ac massa ornare
+                    hendrerit sagittis lacus tempor. Vivamus et dui et
+                    neque accumsan varius et ut erat.
+                    Enean augue arcu, convallis ac ultrices.
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__link&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-link&quot;</span>&gt;</span>Read more<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre><p>Очевидно что этот код немного запутан.  Если верить статье упомянутой во введении, то код создаёт небольшую статью с заголовком, фотографией и текстом-описанием.
+Можно ли сделать эту вёрстку лучше?
+Наверное было бы лучше если бы не приходилось тратить время на её расшифровку. Другими словами, это выглядело бы примерно так:</p>
+<pre><code>article
+    div.title
+        h1 About whitesquare
+        div.filler &amp;nbsp;
+    figure: img width=&quot;136&quot; height=&quot;136&quot; alt=&quot;&quot; src=&quot;sample.png&quot;
+    p
+        | Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        | Pellentesque dictum metus ligula, vitae bibendum augue
+        | fermentum non. Fusce euismod libero eu lectus scelerisque
+        | hendrerit. Nam vel fermentum tellus, vel lobortis felis.
+        | Phasellus dolor ipsum, vehicula ac justo quis,
+        | scelerisque tempus nibh.
+        a Read more</code></pre><p>Оказывается, что вёрстка может говорить сама за себя. И нет никаких препятствий что бы не делать её такой.
+Можно много времени уделять разговорам о повторном использовании кода, но все эти разговоры не имеют большого значения если на выходе получается нечитабельный код.
+Сложный разросшийся код это явный признак того, что в проекте что-то не так. И нет причин, что бы в вёрстке веб-проектов были какие-то другие принципы. Верстальщики такие же люди как и программисты, никто не любит чувствовать дискомфорт на своём рабочем месте. К тому же разросшаяся вёрстка доставляет страдание всем — и верстальщикам, и программистам.</p>
+<h1 id="bemless-или-верстаем-как-хочется">BEMLESS, или верстаем как хочется</h1>
+<p>Представим на некоторое время что не существует никаких правил вёрстки и подобных ограничений.  У нас есть только макет, тот же Corporate Blue и сервер Sinatra со следующими настройками:</p>
+<p>Gemfile</p>
+<pre><code>source <span class="hljs-string">&#x27;https://rubygems.org&#x27;</span>
+
+ruby <span class="hljs-string">&#x27;1.9.3&#x27;</span>
+
+gem <span class="hljs-string">&#x27;sinatra&#x27;</span>
+gem <span class="hljs-string">&#x27;slim&#x27;</span>
+gem <span class="hljs-string">&#x27;therubyracer&#x27;</span>
+gem <span class="hljs-string">&#x27;less&#x27;</span></code></pre><p>config.ru</p>
+<pre><code><span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;./app&#x27;</span>
+run Sinatra::Application</code></pre><p>И само приложение app.rb</p>
+<pre><code><span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;sinatra&#x27;</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;slim&#x27;</span>
+<span class="hljs-keyword">require</span> <span class="hljs-string">&#x27;less&#x27;</span>
+
+set <span class="hljs-symbol">:views</span>, <span class="hljs-symbol">:less</span> =&gt; <span class="hljs-string">&#x27;assets/stylesheets&#x27;</span>, <span class="hljs-symbol">:default</span> =&gt; <span class="hljs-string">&#x27;views&#x27;</span>
+
+helpers <span class="hljs-keyword">do</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">find_template</span><span class="hljs-params">(views, name, engine, &amp;block)</span></span>
+    _, folder = views.detect { <span class="hljs-params">|k,v|</span> engine == Tilt[k] }
+    folder <span class="hljs-params">||</span>= views[<span class="hljs-symbol">:default</span>]
+    <span class="hljs-keyword">super</span>(folder, name, engine, &amp;block)
+  <span class="hljs-keyword">end</span>
+<span class="hljs-keyword">end</span>
+
+get <span class="hljs-string">&#x27;/&#x27;</span> <span class="hljs-keyword">do</span>
+  slim <span class="hljs-symbol">:index</span>
+<span class="hljs-keyword">end</span>
+
+get <span class="hljs-string">&#x27;/:style.css&#x27;</span> <span class="hljs-keyword">do</span>
+  less params[<span class="hljs-symbol">:style</span>].to_sym
+<span class="hljs-keyword">end</span>
+
+get <span class="hljs-string">&#x27;/:image.png&#x27;</span> <span class="hljs-keyword">do</span>
+  send_file File.join(settings.root, <span class="hljs-string">&quot;assets/images/<span class="hljs-subst">#{params[<span class="hljs-symbol">:image</span>]}</span>.png&quot;</span>)
+<span class="hljs-keyword">end</span></code></pre><p>Как видно, настройки проекта и сам проект занимает намного меньше кода чем типичный html-заголовок.</p>
+<p>В проекте три хука, первый для индекс-страницы которая называется index.slim и лежит в папке views, второй и третий подгружают ресурсы вида <code>*.css</code> и <code>*.png</code> из соответствующих папок. (Чуть ниже будут приведены ссылки и на github проект готовый к отправке на heroku.)
+В общем проект в sublime выглядит примерно так:
+<br>
+<img src="/images/bemless_list.png" alt="image"/>
+<br></p>
+<p>Теперь пришло время обратиться к макету:
+<br>
+<img width="618" src="/images/bemless_maquette.png" alt="image"/></p>
+<p>Я не буду акцентироваться на том, что и как надо верстать, просто буду описывать шаг за шагом что я вижу в slim-код.</p>
+<h1 id="вёрстка-каркаса-страницы">Вёрстка каркаса страницы</h1>
+<p>Сначала необходимо добавить заголовки (обычно они лежат в layout, но т. к. приложение одностраничное, то запишу прям в index.slim):</p>
+<pre><code>doctype html
+html
+    head
+        meta charset=&quot;utf-8&quot;
+        title Whitesquare
+        link rel=&quot;stylesheet&quot; href=&quot;/styles.css&quot;
+        link rel=&quot;stylesheet&quot; href=&quot;http://fonts.googleapis.com/css?family=Oswald:400,300&quot;
+        /[if lt IE 9]
+            script src=&quot;http://html5shiv.googlecode.com/svn/trunk/html5.js&quot;</code></pre><p>Затем я вижу следующие элементы: хедерлайн и хедер. Это верхняя часть сайта. Заверстаю её в том порядке как и в макете:</p>
+<pre><code>hr
+header
+    a.logo href=&quot;/&quot;: img src=&quot;logo.png&quot;
+    div.search
+        input type=&quot;text&quot; placeholder=&quot;Search&quot;
+        div.button Go</code></pre><p>Как нетрудно заметить, это несколько лаконичнее чем в БЭМ:</p>
+<pre><code><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-page__line&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-head&quot;</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-head__logo&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-logo&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#&quot;</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-logo__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/Logo.png&quot;</span>/&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-head__search&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-search&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-search__input&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;text&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-input b-input_search&quot;</span> <span class="hljs-attr">placeholder</span>=<span class="hljs-string">&quot;Search&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-search__input&quot;</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-button&quot;</span>&gt;</span>GO<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre><p>Далее следует навбар и слайдер. Вёрстка по тому же принципу — для навбара берётся элемент nav, список оформляется в список, ссылки в ссылки. Т.е. вёрстка становится средством описания иерархии элементов, то что находится внутри должно вкладываться, то что находится рядом должно быть рядом. Все элементы отражают ровно то, что увидит потом конечный пользователь. Если такого элемента нет, то используется наиболее близкий по семантике с соответствующим классом.</p>
+<pre><code>nav
+    ul
+        li: a href=&quot;#&quot; Home
+        li: a.active href=&quot;#&quot; About us
+        li: a href=&quot;#&quot; Services
+        li: a href=&quot;#&quot; Partners
+        li: a href=&quot;#&quot; Projects
+        li: a href=&quot;#&quot; Careers
+        li: a href=&quot;#&quot; Contact
+div.slider
+    div.screen
+    ul
+        li
+            div.index 1
+            div.title Lorem ipsum dolop
+        li.active
+            div.index 2
+            div.title Ultricies peletesque
+        li
+            div.index 3
+            div.title Aliquam ipsum
+        li
+            div.index 4
+            div.title Nullam sed maurus ut</code></pre><p>После навбара идёт главный блок со статьями:</p>
+<pre><code>div.main
+    div.big-news
+        article
+            div.title
+                h1 About whitesquare
+                div.filler &amp;nbsp;
+            figure: img width=&quot;136&quot; height=&quot;136&quot; alt=&quot;&quot; src=&quot;sample.png&quot;
+            p
+                | Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                | Pellentesque dictum metus ligula, vitae bibendum augue
+                | fermentum non. Fusce euismod libero eu lectus scelerisque
+                | hendrerit. Nam vel fermentum tellus, vel lobortis felis.
+                | Phasellus dolor ipsum, vehicula ac justo quis, scelerisque
+                | tempus nibh.
+        article
+            div.title
+                h1 A word from our CEO
+                div.filler &amp;nbsp;
+            figure: img width=&quot;136&quot; height=&quot;136&quot; alt=&quot;&quot; src=&quot;sample.png&quot;
+            p: i
+                | &quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                | Pellentesque dictum metus ligula, vitae bibendum augue
+                | ermentum non. Fusce euismod libero eu lectus scelerisque
+                | hendrerit. Nam vel fermentum tellus, vel lobortis felis.
+                | Phasellus dolor ipsum, vehicula ac justo quis, scelerisque
+                | tempus nibh.&quot;
+            p Yane Naumovski, CEO
+    div.news
+        article
+            div.title
+                h1 Service
+                div.filler &amp;nbsp;
+            p
+                | Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                | Pellentesque dictum metus ligula, vitae bibendum augue
+                | fermentum non. Fusce euismod libero eu lectus scelerisque
+                | hendrerit. Nam vel fermentum tellus, vel lobortis felis.
+                | Phasellus dolor ipsum, vehicula ac justo quis, scelerisque
+                | tempus nibh. Lorem ipsum dolor sit amet, consectetur
+                | adipiscing elit. Pellentesque dictum metus ligula, vitae
+                | bibendum augue fermentum non. Fusce euismod libero eu
+                | lectus scelerisque hendrerit. Nam vel fermentum tellus,
+                | vel lobortis felis. Phasellus dolor ipsum, vehicula ac
+                | justo quis, scelerisque tempus nibh.
+        article
+            div.title
+                h1 Our teams
+                div.filler &amp;nbsp;
+            figure: img width=&quot;36&quot; height=&quot;36&quot; alt=&quot;&quot; src=&quot;sample.png&quot;
+            p
+                | Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                | Pellentesque dictum metus ligula, vitae bibendum augue
+                | fermentum non.
+            figure: img width=&quot;36&quot; height=&quot;36&quot; alt=&quot;&quot; src=&quot;sample.png&quot;
+            p
+                | Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                | Pellentesque dictum metus ligula, vitae bibendum augue
+                | fermentum non.
+            figure: img width=&quot;36&quot; height=&quot;36&quot; alt=&quot;&quot; src=&quot;sample.png&quot;
+            p
+                | Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                | Pellentesque dictum metus ligula, vitae bibendum augue
+                | fermentum non.
+        article
+            div.title
+                h1 24/7/365 SUPPORT
+                div.filler &amp;nbsp;
+            p
+                | Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                | Pellentesque dictum metus ligula, vitae bibendum augue
+                | fermentum non. Fusce euismod libero eu lectus scelerisque
+                | hendrerit. Nam vel fermentum tellus, vel lobortis felis.
+                | Phasellus dolor ipsum, vehicula ac justo quis, scelerisque
+                | tempus nibh.
+    div.clients
+        div.title
+            h1 Our Clients
+            div.filler &amp;nbsp;
+        a href=&quot;#&quot;: img alt=&quot;client1&quot; src=&quot;client1.png&quot;
+        a href=&quot;#&quot;: img alt=&quot;client2&quot; src=&quot;client2.png&quot;
+        a href=&quot;#&quot;: img alt=&quot;client3&quot; src=&quot;client3.png&quot;
+        a href=&quot;#&quot;: img alt=&quot;client4&quot; src=&quot;client4.png&quot;
+        a href=&quot;#&quot;: img alt=&quot;client5&quot; src=&quot;client5.png&quot;
+        a href=&quot;#&quot;: img alt=&quot;client6&quot; src=&quot;client6.png&quot;
+        a href=&quot;#&quot;: img alt=&quot;client7&quot; src=&quot;client7.png&quot;</code></pre><p>Этот участок кода уже выглядит намного более запутанным, но это конечно поверхностное впечатление, из-за большого количества текста и однотипных элементов, в production или при наличии fake-генераторов (что сейчас являются довольно распространённой практикой) код будет выглядеть намного симпатичнее:</p>
+<pre><code>div.main
+    div.big-news
+        article
+            div.title
+                h1=@about.title
+                div.filler &amp;nbsp;
+            figure: img width=&quot;136&quot; height=&quot;136&quot; alt=&quot;&quot; src=@about.photo
+            p=@about.text
+        article
+            div.title
+                h1=@ceo.title
+                div.filler &amp;nbsp;
+            figure: img width=&quot;136&quot; height=&quot;136&quot; alt=&quot;&quot; src=@ceo.photo
+            p: i=@ceo.quote
+            p=@ceo.name
+    div.news
+        article
+            div.title
+                h1=@service.title
+                div.filler &amp;nbsp;
+            p=@service.text
+        article
+            div.title
+                h1 Our teams
+                div.filler &amp;nbsp;
+            - @team.each do |emp|
+                figure: img width=&quot;36&quot; height=&quot;36&quot; alt=&quot;&quot; src=emp.photo
+                p=emp.title
+        article
+            div.title
+                h1 24/7/365 SUPPORT
+                div.filler &amp;nbsp;
+            p=@support.text
+    div.clients
+        div.title
+            h1 Our Clients
+            div.filler &amp;nbsp;
+        - @clients.each do |client|
+            a href=&quot;#&quot;: img alt=client.title src=client.logo</code></pre><p>Теперь сравним с тем, что предлагает БЭМ:</p>
+<pre><code><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-page__line&quot;</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-main&quot;</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-main__item&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__header&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">b-item-head__img</span>&gt;</span>
+                            <span class="hljs-tag">&lt;<span class="hljs-name">img</span>  <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/sq.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__text&quot;</span>&gt;</span>ABOUT WHITESQUARE<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__content&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>/&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__text&quot;</span>&gt;</span>
+                            In ultricies pellentesque massa a porta. Aliquam ipsum
+                            enim, hendrerit ut porta nec, ullamcorper et nulla. In
+                            eget mi dui, sit amet scelerisque nunc. Aenean augue arcu,
+                            convallis ac vulputate vitae, mollis non lectus. Donec
+                            hendrerit lacus ac massa ornare hendrerit sagittis lacus
+                            tempor. Vivamus et dui et neque accumsan varius et ut erat.
+                            Enean augue arcu, convallis ac ultrices.
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__link&quot;</span>&gt;</span>
+                            <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-link&quot;</span>&gt;</span>Read more<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-main__item&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__header&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__img&quot;</span>&gt;</span>
+                            <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/sq.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                           <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__text&quot;</span>&gt;</span>A WORD FROM OUR CEO<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__content&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>/&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__text&quot;</span>&gt;</span>
+                            In ultricies pellentesque massa a porta. Aliquam
+                            ipsum enim, hendrerit ut porta nec, ullamcorper
+                            et nulla. In eget mi dui, sit amet scelerisque
+                            nunc. Aenean augue arcu, convallis ac vulputate
+                            vitae, mollis non lectus. Donec hendrerit lacus
+                            ac massa ornare hendrerit sagittis lacus tempor.
+                            Vivamus et dui et neque accumsan varius et ut erat.
+                            Enean augue arcu, convallis ac ultrices.
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__link&quot;</span>&gt;</span>
+                            <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Yane Naumoski, CEO<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-main__item b-main__item_small&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__header&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__img&quot;</span>&gt;</span>
+                            <span class="hljs-tag">&lt;<span class="hljs-name">img</span>  <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/sq.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__text  &quot;</span>&gt;</span>SERVICES<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__content&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__text&quot;</span>&gt;</span>
+                            In ultricies pellentesque massa a porta. Aliquam
+                            ipsum enim, hendrerit ut porta nec, ullamcorper
+                            et nulla. In eget mi dui, sit amet scelerisque
+                            nunc. Aenean augue arcu, convallis ac vulputate
+                            vitae, mollis non lectus. Donec hendrerit lacus
+                             ac massa ornare hendrerit sagittis lacus tempor.
+                              Vivamus et dui et neque accumsan varius et ut
+                              erat. Enean augue arcu, convallis ac ultrices.
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__link&quot;</span>&gt;</span>
+                           <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-link&quot;</span>&gt;</span>Read more<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-main__item b-main__item_small&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__header&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__img&quot;</span>&gt;</span>
+                            <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/sq.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__text  &quot;</span>&gt;</span>OUR TEAM<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__content&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-context__team&quot;</span>&gt;</span>
+                            <span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-team&quot;</span>&gt;</span>
+                               <span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-team__item&quot;</span>&gt;</span>
+                                   <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate&quot;</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/small.png&quot;</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__head&quot;</span>&gt;</span>
+                                           Lorem Ipsum
+                                       <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__text&quot;</span>&gt;</span>
+                                        In ultricies pellentesque massa a porta.
+                                        Aliquam ipsum enim, hendrerit ut porta nec
+                                       <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                                   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                               <span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+                                <span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-team__item&quot;</span>&gt;</span>
+                                   <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate&quot;</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/small.png&quot;</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__head&quot;</span>&gt;</span>
+                                           Lorem Ipsum
+                                       <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__text&quot;</span>&gt;</span>
+                                           In ultricies pellentesque massa a porta.
+                                           Aliquam ipsum enim, hendrerit ut porta nec
+                                       <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                                   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                               <span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+                                <span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-team__item&quot;</span>&gt;</span>
+                                   <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate&quot;</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/small.png&quot;</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__head&quot;</span>&gt;</span>
+                                           Lorem Ipsum
+                                       <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                                       <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-teammate__text&quot;</span>&gt;</span>
+                                           In ultricies pellentesque massa
+                                           a porta. Aliquam ipsum enim,
+                                           hendrerit ut porta nec
+                                       <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                                   <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                               <span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+                            <span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-main__item b-main__item_small&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__header&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__img&quot;</span>&gt;</span>
+                            <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/sq.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__text  &quot;</span>&gt;</span>24/7/365 SUPPORT<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__content&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__text&quot;</span>&gt;</span>
+                            In ultricies pellentesque massa a porta.
+                            Aliquam ipsum enim, hendrerit ut porta nec,
+                             ullamcorper et nulla. In eget mi dui,
+                             sit amet scelerisque nunc. Aenean augue
+                             arcu, convallis ac vulputate vitae, mollis
+                             non lectus. Donec hendrerit lacus ac massa
+                             ornare hendrerit sagittis lacus tempor.
+                             Vivamus et dui et neque accumsan varius
+                             et ut erat. Enean augue arcu, convallis
+                             ac ultrices.
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-content__link&quot;</span>&gt;</span>
+                           <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;#&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-link&quot;</span>&gt;</span>Read more<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-main__item b-main__item_long&quot;</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company&quot;</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__header&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__img&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span>  <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/sq.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__text  &quot;</span>&gt;</span>OUR CLIENTS<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-item-head__white-space&quot;</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-company__content&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-companies&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-companies__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-companies__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-companies__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-companies__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-companies__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;b-companies__img&quot;</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;img/middle.png&quot;</span>&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">g-clear</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre><p>Здесь я думаю комментарии излишни.
+Остался футер, его верстаю в такой же манере:</p>
+<pre><code>footer
+    div.info
+        div.twitter-feed
+            h1 Twitter feed
+            p
+                a href=&quot;#&quot; 23 oct
+                br
+                | Fusce euismod libero eu lectus scelerisque
+                | hendrerit. Nam vel fermentum tellus, vel
+                | lobortis felis. Phasellus dolor ipsum,
+                | vehicula ac justo quis, scelerisque tempus nibh.
+        div.sitemap
+            h1 Sitemap
+            div.column
+                a href=&quot;#&quot; Home
+                a href=&quot;#&quot; About
+                a href=&quot;#&quot; Service
+            div.column
+                a href=&quot;#&quot; Partners
+                a href=&quot;#&quot; Support
+                a href=&quot;#&quot; Contact
+        div.social-networks
+            h1 Social networks
+            div.big-icons
+                a.twitter href=&quot;#&quot;: img alt=&quot;twitter logo&quot; src=&quot;social-twitter.png&quot;
+                a.facebook href=&quot;#&quot;: img alt=&quot;facebook logo&quot; src=&quot;social-facebook.png&quot;
+                a.gplus href=&quot;#&quot;: img alt=&quot;gplus logo&quot; src=&quot;social-gplus.png&quot;
+            div.small-icons
+                a.vimeo href=&quot;#&quot;: img alt=&quot;vimeo logo&quot; src=&quot;social-vimeo.png&quot;
+                a.flickr href=&quot;#&quot;: img alt=&quot;flickr logo&quot; src=&quot;social-flickr.png&quot;
+                a.inst href=&quot;#&quot;: img alt=&quot;instagram logo&quot; src=&quot;social-inst.png&quot;
+                a.rss href=&quot;#&quot;: img alt=&quot;rss logo&quot; src=&quot;social-rss.png&quot;
+
+        div.credits
+            a.logo href=&quot;#&quot;: img src=&quot;footer-logo.png&quot; alt=&quot;Whitesquare logo&quot;
+            p
+                | Copyright &amp;copy; 2012 Whitesquare. A
+                a href=&quot;http://pcklab.com&quot; &amp;nbsp;pcklab&amp;nbsp;
+                | creation</code></pre><h1 id="описание-стилей">Описание стилей</h1>
+<p>Без стилей страница будет выглядеть почти plain text. Теперь пришло время описать стили, для этого можно создать styles.less и накидать иерархию, которая будет более-менее соответствовать иерархии в html.</p>
+<p>Первончально это может выглядеть примерно так (листинг styles.less):</p>
+<pre><code>.whitesquare{
+    hr{}
+    header{
+        a.logo{}
+        .search{
+            input{}
+            .button{}
+        }
+    }
+    nav{
+        ul{
+            li{
+                a{}
+            }
+        }
+    }
+    div.slider{
+        .screen{}
+        ul{
+            li{
+                .index{}
+                .title{}
+                &amp;.active{
+                    .index{}
+                    .title{}
+                }
+            }
+        }
+    }
+    .main{
+        .big-news{
+            article{}
+        }
+        .news{
+            article{
+            }
+            .clearfix;
+        }
+        .clients{
+            .title{}
+            a{}
+        }
+    }
+    footer{
+        .info{
+            h1{}
+            p{}
+            .twitter-feed{}
+            .sitemap{}
+            .social-networks{}
+            .credits{}
+        }
+    }
+}</code></pre><p>Т.е. создаётся less-файл который задаёт структуру шаблона, от расположения того или иного элемента в иерархии этой структуры зависит стили которые он унаследует или нет.</p>
+<p>Далее я могу сказать, что эта страница имеет некоторый зернистый фон, и описать соответствующим образом CSS-свойства, например так:</p>
+<pre><code><span class="hljs-selector-class">.gray-noise</span>{
+    <span class="hljs-attribute">background-color</span>: <span class="hljs-number">#f7f7f7</span>;
+    <span class="hljs-attribute">color</span>: <span class="hljs-number">#8f8f8f</span>;
+    <span class="hljs-attribute">background</span>: url(<span class="hljs-string">&quot;bg.png&quot;</span>);
+}</code></pre><p>А хедерлайн растянут на всю страницу и имеет некоторую толщину:</p>
+<pre><code><span class="hljs-selector-class">.full-width</span>{
+    <span class="hljs-attribute">margin</span>: <span class="hljs-number">0</span>;
+    <span class="hljs-attribute">width</span>:<span class="hljs-number">100%</span>;
+}
+
+<span class="hljs-selector-class">.thick-headerline</span>{
+    <span class="hljs-attribute">height</span>:<span class="hljs-number">5px</span>;
+    <span class="hljs-attribute">background-color</span>:<span class="hljs-number">#7e7e7e</span>;
+}</code></pre><p>Все эти классы помещаются в helpers.less, а в самом файле styles.less они добавляются как mixin&#39;ы</p>
+<pre><code>.whitesquare{
+    .full-width;
+    .gray-noise;
+    .tahoma-font;
+
+    hr{
+        .full-width;
+        .thick-headerline;
+    }
+}</code></pre><p>Такую операцию можно провернуть не только с цветами, но и со сложными элемантами используя параметрические mixin&#39;ы. Например для маленьких и больших figure можно использовать один mixin с параметром <code>@size</code>:</p>
+<pre><code><span class="hljs-selector-class">.custom-figure</span>(<span class="hljs-variable">@size</span>){
+    <span class="hljs-attribute">margin-top</span>: <span class="hljs-number">0px</span>;
+    <span class="hljs-attribute">margin-left</span>: <span class="hljs-number">0px</span>;
+    <span class="hljs-attribute">margin-right</span>: <span class="hljs-number">10px</span>;
+    <span class="hljs-attribute">display</span>: block;
+    <span class="hljs-attribute">width</span>: <span class="hljs-variable">@size</span>; <span class="hljs-attribute">height</span>: <span class="hljs-variable">@size</span>;
+    <span class="hljs-attribute">float</span>: left;
+    <span class="hljs-attribute">background-color</span>: <span class="hljs-variable">@light-gray</span>;
+    <span class="hljs-attribute">border</span>: <span class="hljs-number">1px</span> solid <span class="hljs-number">#c9c9c9</span>;
+    <span class="hljs-selector-tag">img</span>{
+        <span class="hljs-attribute">margin</span>: <span class="hljs-number">1px</span>;
+    }
+}</code></pre><p>Теперь в <code>styles.less</code> это обеспечит отображение как маленьких картинок, так и больших:</p>
+<pre><code><span class="hljs-selector-class">.big-news</span>{
+    <span class="hljs-selector-tag">article</span>{
+        <span class="hljs-attribute">float</span>: left;
+        <span class="hljs-attribute">width</span>: <span class="hljs-number">50%</span>;
+
+        <span class="hljs-selector-class">.title</span>{
+            <span class="hljs-selector-class">.complex-title</span>;
+        }
+        <span class="hljs-selector-tag">figure</span>{
+            <span class="hljs-selector-class">.custom-figure</span>(<span class="hljs-number">138px</span>);
+        }
+        <span class="hljs-selector-tag">p</span>{
+            <span class="hljs-attribute">margin-right</span>: <span class="hljs-number">10px</span>;
+        }
+    }
+}
+
+<span class="hljs-selector-class">.news</span>{
+    <span class="hljs-selector-tag">article</span>{
+        <span class="hljs-attribute">float</span>: left;
+        <span class="hljs-attribute">width</span>: <span class="hljs-number">33.3333%</span>;
+
+        <span class="hljs-selector-class">.title</span>{
+            <span class="hljs-selector-class">.complex-title</span>;
+        }
+        <span class="hljs-selector-tag">figure</span>{
+            <span class="hljs-selector-class">.custom-figure</span>(<span class="hljs-number">38px</span>);
+        }
+        <span class="hljs-selector-tag">p</span>{
+            <span class="hljs-attribute">margin-right</span>: <span class="hljs-number">10px</span>;
+        }
+    }
+    <span class="hljs-selector-class">.clearfix</span>;
+}</code></pre><p>Таким образом, файл <code>styless.less</code> начинает играть туже роль что контроллеры в MVC-проекты,  появляется возможность варьировать стиль элемента без переписывания стилей или изменения вёрстки.
+Полный листинг стилей можно посмотреть на bitbucket <a href="https://bitbucket.org/kreshikhin/bemless">https://bitbucket.org/kreshikhin/bemless</a>, а результат на heroku <a href="http://bemless.herokuapp.com/">http://bemless.herokuapp.com/</a>
+Т.к. целью статьи было показать преимущества свободного подхода, то я не стал добиваться идеальной вёрстки, и там есть ещё над чем работать.</p>
+<h1 id="и-снова-бэм">И снова БЭМ</h1>
+<p>Теперь не лишним будет детально разобраться в чём конкретно заключаются недостатки БЭМ и в чём преимущества современной вёрстки на шаблонизаторах с css-препроцессором. Для этого проанализируем цели декларируемые в описании методологии <a href="http://ru.bem.info/method/">http://ru.bem.info/method/</a></p>
+<blockquote>1. <b>Типовые проекты должны разрабатываться быстро, но жить долго.</b> Нужно уметь за короткий срок создать проект, архитектура которого позволит без труда поддерживать и развивать его долгие годы.
+</blockquote>
+
+<p>БЭМ не позволяет создавать что-то быстро, но заставляет писать очень много лишнего кода. Каждый БЭМ-класс должнен удовлетворять куче требований, которые могут быть не связаны с семантикой класса, а лишь отражать его положение в структуре. Таким образом, верстальщик берёт на себя часть работы компьютера. Цель же любой команды - максимально автоматизировать процесс разработки, что бы каждый её участник мог наилучшим образом реализовать свой творческий потенциал.</p>
+<p>Использование современных шаблонизаторов и css-прероцессоров куда лучше позволяет решать эту задачу.</p>
+<blockquote>2. <b>Над проектом работает много людей.</b> Нужно уметь эффективно организовывать работу команд, как из двух разработчиков, так и из десятков.
+</blockquote>
+
+<p>Веб является миром инноваций и творчества. Единственный путь добиться хороших результатов от творческих работников заключается в предоставлении им максимальной свободы действия. БЭМ ограничивает свободу, в то время как современные инструменты разработки направлены на эмансипацию труда: системы контроля версий позволяют одновременно редактировать один файл нескольким разработчикам; системы непрерывной интеграции позволяют отсеивать креш-коммиты; таск-менеджеры планировать работу даже для людей в разных временных поясах. БЭМ наоборот –  идёт против тренда, накладывая только ограничения и не представляя никакой свободы компенсирующей эти ограничения.</p>
+<blockquote>3. <b>Масштабируемость команд.</b> Добавление новых людей в команду должно улучшать производительность команды. Необходима возможность быстро вводить новых разработчиков в курс дела и выделять им собственные зоны ответственности. Для того, чтобы с одним и тем же кодом можно было работать долгое время и разным составом команды, код должен быть хорошо структурирован.
+</blockquote>
+
+<p>Масштабируемость лучше всего достижима в том случае, если от кандидатов не требуется каких-то дополнительных знаний. Современные шаблонизаторы и препроцессоры интуитивно понятны, в отличии от чистого HTML и CSS. БЭМ кроме этого требует ещё и соблюдения внутренней бюрократии.</p>
+<p>Бюрократия же не масштабируема по определению.</p>
+<blockquote>4. <b>Повторное использование кода.</b> Каждый новый проект или элемент интерфейса не должны писаться с нуля. Если где-то внутри компании уже выполнялась похожая задача, нужно максимально повторно использовать полученный в результате код. У кода не должно быть контекстной зависимости, его нужно уметь легко переносить в другое место.
+</blockquote>
+
+<p>БЭМ принципиально не позволяет использовать код повторно, если понимать повторное использование в классическом смысле. Единственное что позволяет делать БЭМ это копипастить, бессмысленно и беспощадно. Современные css-препроцессоры позволяют создавать целые библиотеки для повторного использования на основе миксинов, которые способны играть такую же роль как функции и классы в языках общего назначения.</p>
+<h1 id="выводы">Выводы</h1>
+<p>Свобода действий в командной разработке и приверженность современным технологиям гораздо важнее  чем какие-либо методологии.  Вместе с CSS-препроцессором типа LESS и на современном шаблонизаторе вроде slim легко решаются абсолютно все проблемы, которые призван решить БЭМ. При этом качество проекта намного возрастает:</p>
+<ul>
+<li>можно использовать чистую семантическую вёрстку в т.ч. HTML5, не плодя лишних классов</li>
+<li>вёрстка лаконична и читабельна</li>
+<li>есть возможность создавать библиотеки для повторного использования css-кода</li>
+<li>стили и элементы не имеют жёсткой привязки, стили можно подстраивать не меняя названия класса</li>
+<li>вёрстка готова к интеграции в проект, без переделки под шаблонизатор</li>
+<li>у верстальщика развязаны руки, нет методологических ограничений</li>
+<li>данные технологии легко вписываются в демократически организованные команды</li>
+</ul>
+<p>Этот список конечно не полный, в html и css вёрстке накопилось столько проблем, что их все не получится обсудить в одной статье.</p>
+<p>В любом случае выбор за вами, сидеть на БЭМ или двигаться дальше.</p>
+<p><a href="http://bemless.herokuapp.com/">bemless на heroku</a></p>
+<p><a href="https://bitbucket.org/kreshikhin/bemless%22">bemless на bitbucket</a></p>
+</p></div></div><div id="disqus_thread"></div><script>/* * * CONFIGURATION VARIABLES * * */
+var disqus_shortname = 'kreshikhin';
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the<a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript></div><!-- Yandex.Metrika counter--><script>(function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter31572828 = new Ya.Metrika({
+                    id:31572828,
+                    clickmap:true,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");</script><noscript><div><img src="https://mc.yandex.ru/watch/31572828" style="position:absolute; left:-9999px;" alt=""></div></noscript><!-- /Yandex.Metrika counter--></body></html>

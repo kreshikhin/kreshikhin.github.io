@@ -4,10 +4,12 @@ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-43835648-1', 'auto');
-ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>software development, computer science</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
-div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Uploading video to Twitter with Go</h1><p><p>The possibility of short video uploading in Twitter is provided by official API for almost a year. Of course Twitter also let to show video from Youtube or Vimeo before, but video uploaded in Twitter directly will be played on scrolling without any clicks or taps. That increases the attractiveness to users.</p>
+ga('send', 'pageview');</script></head><body><div class="top-menu"><a class="author" href="https//kreshikhin.com">Денис Крешихин</a><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow active" href="../about.html">Обо мне</a></li></ul></div><div class="left-menu"><div class="holder"><h1 class="author">Денис<br>Крешихин</h1><h2>iOS-разработчик с 15+ летним опытом</h2><h2>Тимлид/сеньор по обстоятельствам</h2><h2>Интересы: swift, uikit, rxswift, oop/ood, devops, agile</h2><ul class="active-undefined"><li><a class="item-articles red" href="../index.html">Статьи</a></li><li><a class="item-apps orange" href="../apps.html">Пет-проекты</a></li><li><a class="item-about yellow" href="../about.html">Обо мне</a></li><li><a class="green" href="https://github.com/kreshikhin">Github</a></li><li><a class="skyblue" href="https://twitter.com/kreshikhin">Twitter</a></li><li><a class="item-job blue" href="https://www.linkedin.com/in/denis-kreshikhin/">LinkedIn</a></li></ul><h4 style="color: gray">2024 © Денис Крешихин</h4></div></div><div class="content"><!--div.navigationdiv.back: a(href="/") << на главную
+div.about: a(href="/about") об авторе--><div class="articles"><div class="article"><h1 class="title">Uploading video to Twitter with Go</h1><p><p>Уже почти год на Twitter можно заливать короткие видеоролики, более того возможность загрузки видео доступна из официального API.
+Конечно, Twitter и раньше позволял отображать ролики из видеохостингов как Youtube и Vimeo, но нужно иметь ввиду, что в отличии от встроенных медиа эти ролики не воспроизводятся автоматически при прокрутке, что привлекает пользователь в меньшей степени.</p>
+<p>В этой заметке я опишу как загруждать видео прямиком на Twitter.</p>
 <h2 id="twitter-oauth">Twitter OAuth</h2>
-<p>First of all we need to register our application on Twitter and take <code>consumer_key</code> and <code>consumer_secret</code>. The key and secret are required for OAuth. We will use library <code>&quot;github.com/mrjones/oauth&quot;</code> for establishing a connection through OAuth.</p>
+<p>Для начала необходимо завести на Twitter свое приложение и получить consumer_key и consumer_secret которые будут необходимы для авторизации через OAuth. Для авторизации через OAuth потребуется подключить библиотеку <code>&quot;github.com/mrjones/oauth&quot;</code> и инициализировать объект <code>consumer</code>:</p>
 <pre><code>consumerKey := <span class="hljs-string">&quot;YOUR_COSUMER_KEY&quot;</span>
 consumerSecret := <span class="hljs-string">&quot;YOUR_COSUMER_SECRET&quot;</span>
 
@@ -20,43 +22,44 @@ c := oauth.NewConsumer(
         AccessTokenUrl:    <span class="hljs-string">&quot;https://api.twitter.com/oauth/access_token&quot;</span>,
     })
 
-c.Debug(<span class="hljs-literal">false</span>)</code></pre><p>Authorization of a user is required for video upload. So for process automation is useful to save authorization data from previous session in a file (e.g. <code>twitter.json</code>). In this case there aren&#39;t any necessity for make login in browser manually each time.</p>
-<pre><code>accessToken := ReadAccessToken(<span class="hljs-string">&quot;twitter.json&quot;</span>)
+c.Debug(<span class="hljs-literal">false</span>)</code></pre><p>Для возможности загружать видео необходима авторизация пользователя. Что бы автоматизировать этот процесс полезно хранить авторизационные данные от предыдущей сессии в файле (например twitter.json), тогда не будет необходимости переходить в браузер каждый раз:</p>
+<pre><code>    accessToken := ReadAccessToken(<span class="hljs-string">&quot;twitter.json&quot;</span>)
 
-<span class="hljs-keyword">if</span> accessToken == <span class="hljs-literal">nil</span> {
-    <span class="hljs-keyword">return</span>;
+    <span class="hljs-keyword">if</span> accessToken == <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span>;
 
-    requestToken, u, err := c.GetRequestTokenAndUrl(<span class="hljs-string">&quot;oob&quot;</span>)
-    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
-        log.Fatal(err)
+        requestToken, u, err := c.GetRequestTokenAndUrl(<span class="hljs-string">&quot;oob&quot;</span>)
+        <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+            log.Fatal(err)
+        }
+
+        fmt.Println(<span class="hljs-string">&quot;(1) Go to: &quot;</span> + u)
+        fmt.Println(<span class="hljs-string">&quot;(2) Grant access, you should get back a verification code.&quot;</span>)
+        fmt.Println(<span class="hljs-string">&quot;(3) Enter that verification code here: &quot;</span>)
+
+        verificationCode := <span class="hljs-string">&quot;&quot;</span>
+        fmt.Scanln(&amp;verificationCode)
+
+        accessToken, err = c.AuthorizeToken(requestToken, verificationCode)
+        <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+            log.Fatal(err)
+        }
     }
 
-    fmt.Println(<span class="hljs-string">&quot;(1) Go to: &quot;</span> + u)
-    fmt.Println(<span class="hljs-string">&quot;(2) Grant access, you should get back a verification code.&quot;</span>)
-    fmt.Println(<span class="hljs-string">&quot;(3) Enter that verification code here: &quot;</span>)
-
-    verificationCode := <span class="hljs-string">&quot;&quot;</span>
-    fmt.Scanln(&amp;verificationCode)
-
-    accessToken, err = c.AuthorizeToken(requestToken, verificationCode)
+    client, err := c.MakeHttpClient(accessToken)
     <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
-        log.Fatal(err)
-    }
-}
-
-client, err := c.MakeHttpClient(accessToken)
-<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
-    <span class="hljs-built_in">panic</span>(err)
-}</code></pre><p>The variable <code>client</code> containing the token opens an access to Twitter API for us.</p>
-<p>##Upload video by Twitter API
-We can&#39;t attach a video directly to a message at moment of sending, because unique <code>media_id</code> is required for publication of the message in Twitter. We should take <code>media_id</code> before uploading the video by the next steps:</p>
+        <span class="hljs-built_in">panic</span>(err)
+    }</code></pre><p>Объект <code>client</code> с токеном открывает нам доступ к Twitter API.</p>
+<p>##Загрузка видео с Twitter API
+Мы не можем прикрепить видео непосредственно к сообщению в момент отправки, т.к. для публикации сообщения в Twitter с медиа требуется получить уникальный ID который называется <code>media_id</code> и сперва загрузить видео туда.</p>
+<p>Для загрузки видео на Twitter следует выполнить следующие шаги:</p>
 <ol>
-<li>Send length of the content and take <code>media_id</code></li>
-<li>Upload the content</li>
-<li>Finish content uploading by special request</li>
-<li>Send message with <code>media_id</code></li>
+<li>Получить уникальный <code>media_id</code> указав длину контента</li>
+<li>Загрузить контент</li>
+<li>Финализировать контент</li>
+<li>Отправить сообщение с указанием <code>media_id</code></li>
 </ol>
-<p>We will store URLs for requests in constants <code>StatusUpdate</code> and <code>MediaUpload</code>. The structure <code>Twitter</code> will store only reference to <code>http.Client</code>:</p>
+<p>Для загрузки медиа контента и публикации сообщения потребуются два пути Twitter REST API, поэтому полезно определить их как константы модуля. Сама структура Twitter должна хранить как минимум указатель на авторизованный клиент:</p>
 <pre><code>
 <span class="hljs-keyword">package</span> twitter
 
@@ -71,9 +74,9 @@ We can&#39;t attach a video directly to a message at moment of sending, because 
     self := &amp;Twitter{}
     self.client = client
     <span class="hljs-keyword">return</span> self
-}</code></pre><h3 id="initialization-and-taking-of-media_id">Initialization and taking of <code>media_id</code></h3>
-<p>At moment of initialization we should set two important parameters: <code>media_type</code> and <code>total_bytes</code>. The parameters should precisely to fit the content, because Twitter will use this parameters for check correctness of uploading. An inaccuracy in values of this parameters will result to denial of publication the content.</p>
-<p>It&#39;s also necessary to set the correct mime type in the header <code>application/x-www-form-urlencoded</code>:</p>
+}</code></pre><h3 id="инициализация-и-получение-media_id">Инициализация и получение media_id</h3>
+<p>В момент инициализации мы должны указать два важных параметра: <code>media_type</code> и <code>total_bytes</code>. Эти параметры должны объективно соответствовать параметрам контента, т.к. по ним происходит проверка корретности загрузки. Ошибка в указании типа контента и его длины приводит к ошибки публикации сообщения.</p>
+<p>Так же не следует забывать указывать в хедере формат данных сообщения <code>application/x-www-form-urlencoded</code>:</p>
 <pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(self *Twitter)</span> <span class="hljs-title">MediaInit</span><span class="hljs-params">(media []<span class="hljs-keyword">byte</span>)</span> <span class="hljs-params">(*MediaInitResponse, error)</span></span> {
     form := url.Values{}
     form.Add(<span class="hljs-string">&quot;command&quot;</span>, <span class="hljs-string">&quot;INIT&quot;</span>)
@@ -103,12 +106,11 @@ We can&#39;t attach a video directly to a message at moment of sending, because 
     fmt.Println(<span class="hljs-string">&quot;Initialized media: &quot;</span>, mediaInitResponse);
 
     <span class="hljs-keyword">return</span> &amp;mediaInitResponse, <span class="hljs-literal">nil</span>
-}</code></pre><h2 id="upload-of-content">Upload of content</h2>
-<p>After we take right response with <code>media_id</code>, which as a rule stores some big integer value, we can upload our content.
-It should be borne in mind, despite of limit in <code>15MB</code> we can&#39;t upload all video in one chunk.</p>
-<p>At first, Twitter will return error for chunks more <code>5MB</code>.
-At second, we can&#39;t show smooth changes in progress bar in case of uploading of a content by big chunks.</p>
-<p>So it will be optimally to split content on <code>500KB</code> chunks. The chunks can be uploaded in arbitrary order.</p>
+}</code></pre><h2 id="загрузка-контента">Загрузка контента</h2>
+<p>Получив корректный ответ с указанным <code>media_id</code>, которое хранит как-правило некоторое большое целочисленно значение, можно приступать к загрузки. Нужно иметь ввиду, что не смотря на ограничение в <code>15MB</code> загрузать весь контент разом не желательно. Для этого есть две причины.</p>
+<p>Во-первых, Twitter выдает ошибку при загрузке блоков больше <code>5MB</code> поэтому желательно делать размер блока меньше.
+Во-вторых, передавая большие блоки трудно отследить прогресс загрузки, в случае если такая информация должна отображаться для пользователя.</p>
+<p>Для видеоконтента вполне подходит размер блоков в <code>500KB</code>. Блоки могут быть загружены в произвольном порядке:</p>
 <pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(self *Twitter)</span> <span class="hljs-title">MediaAppend</span><span class="hljs-params">(mediaId <span class="hljs-keyword">uint64</span>, media []<span class="hljs-keyword">byte</span>)</span> <span class="hljs-title">error</span></span> {
     step := <span class="hljs-number">500</span> * <span class="hljs-number">1024</span>
     <span class="hljs-keyword">for</span> s := <span class="hljs-number">0</span>; s * step &lt; <span class="hljs-built_in">len</span>(media); s++ {
@@ -151,9 +153,9 @@ At second, we can&#39;t show smooth changes in progress bar in case of uploading
     }
 
     <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
-}</code></pre><p>Note the line <code>req.Header.Add(&quot;Content-Type&quot;, w.FormDataContentType())</code>. It plays important role in upload, because it makes our request  <code>multipart</code>. Without this line Twitter will returns error of upload, because <code>multipart</code> body is required by server.</p>
-<h2 id="finalization-content-upload">Finalization content upload</h2>
-<p>After receiving a successful response on every chunk we should finalize upload process. As a rule if type of content of length of data were set incorrectly we take error on this step of upload (before sending our message):</p>
+}</code></pre><p>Особое внимание следует обратить на строчку <code>req.Header.Add(&quot;Content-Type&quot;, w.FormDataContentType())</code> т.к. таким способом происходит запись <code>multipart</code> данных в тело запроса. Без этой строчки ничего работать не будет, т.к. Twitter поддерживает загрузку видео только в  <code>multipart</code> формате.</p>
+<h2 id="финализация-загрузки-контента">Финализация загрузки контента</h2>
+<p>Получив успешные ответы от загрузки каждого блока можно делать финализацию. Обычно если тип контента или объем данных были некорретны, то ошибка возвращается именно на этом этапе, т.е. до отправки сообщения:</p>
 <pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(self *Twitter)</span> <span class="hljs-title">MediaFinilize</span><span class="hljs-params">(mediaId <span class="hljs-keyword">uint64</span>)</span> <span class="hljs-title">error</span></span> {
     form := url.Values{}
     form.Add(<span class="hljs-string">&quot;command&quot;</span>, <span class="hljs-string">&quot;FINALIZE&quot;</span>)
@@ -172,9 +174,9 @@ At second, we can&#39;t show smooth changes in progress bar in case of uploading
     fmt.Println(<span class="hljs-string">&quot;final response &quot;</span>, <span class="hljs-keyword">string</span>(body))
 
     <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
-}</code></pre><h2 id="send-message-with-attached-media">Send message with attached media</h2>
-<p>Now we can set <code>media_id</code> as parameter in our message after successful upload.</p>
-<p>It should be borne in mind, the <code>media_id</code> should be set in field <code>media_ids</code> even for a video. It&#39;s can be single string e.g. <code>status=text&amp;media_ids=1234567890</code>.</p>
+}</code></pre><h2 id="отправка-сообщения-с-медиа">Отправка сообщения с медиа</h2>
+<p>Итак, успешно завершив загрузку мы можем передать <code>media_id</code> как параметр для нового сообщения.
+Нужно иметь ввиду, что даже для видео требуется указывать параметр в поле <code>media_ids</code> а не <code>media_id</code>. При этом значение этого поля не обязано хранить массив, там может быть обычная строка, т.е. в формате <code>urlencoded</code> это должно выглядеть примерно как <code>status=text&amp;media_ids=1234567890</code>.</p>
 <pre><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(self *Twitter)</span> <span class="hljs-title">UpdateStatusWithMedia</span><span class="hljs-params">(text <span class="hljs-keyword">string</span>, mediaId <span class="hljs-keyword">uint64</span>)</span> <span class="hljs-title">error</span></span> {
     form := url.Values{}
     form.Add(<span class="hljs-string">&quot;status&quot;</span>, text)
@@ -193,20 +195,21 @@ At second, we can&#39;t show smooth changes in progress bar in case of uploading
     fmt.Println(<span class="hljs-string">&quot;status response &quot;</span>, <span class="hljs-keyword">string</span>(body))
 
     <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
-}</code></pre><h2 id="what-if-nothing-works">What if nothing works?</h2>
+}</code></pre><h2 id="что-делать-если-ничего-не-работает">Что делать если ничего не работает?</h2>
 <ul>
-<li>Check a size of your video should be <code>&lt;15MB</code></li>
-<li>Check a type of your video is <code>mp4</code></li>
-<li>Check a duration of your video <code>&lt;30s</code></li>
-<li>Check width, height and resolution of your video are respond of Twitter requirements</li>
-<li>Try to upload your video through browser</li>
-<li>Try to upload your video through another browsers</li>
+<li>Проверить что размер видео не превышает <code>15MB</code></li>
+<li>Проверить что тип видео действительно <code>mp4</code></li>
+<li>Проверить что длительность видео не превышает 30 секунд</li>
+<li>Проверить что разрешение видео и частота кадров соответсвуют требованиям Twitter</li>
+<li>Попробовать загрузить тоже видео через браузер</li>
+<li>Если видео не грузиться через некоторый браузер, попробовать другой браузер</li>
 </ul>
-<p>The requirements of Twitter for video are described here: <a href="https://dev.twitter.com/rest/public/uploading-media#videorecs">https://dev.twitter.com/rest/public/uploading-media#videorecs</a></p>
-<h2 id="conclusion">Conclusion</h2>
-<p>Despite the difficulties, direct upload through official API is very good thing for developers.</p>
-<p>Source code:  <a href="https://github.com/kreshikhin/twitter-media-uploader">https://github.com/kreshikhin/twitter-media-uploader</a></p>
-<p>Official Twitter manual: <a href="https://dev.twitter.com/rest/reference/post/media/upload">https://dev.twitter.com/rest/reference/post/media/upload</a></p>
+<p>Требования Twitter описаны здесь: <a href="https://dev.twitter.com/rest/public/uploading-media#videorecs">https://dev.twitter.com/rest/public/uploading-media#videorecs</a></p>
+<h2 id="заключение">Заключение</h2>
+<p>Несмотря на то, что такая загрузка кажется довольно сложной, следует иметь ввиду, что многие другие социальные сети крайне не любят когда происходит загрузка видео минуя формы сайта или нативное приложение. В Twiiter же в этом плане намного проще.</p>
+<p>Особенный респект разработчикам библиотеки <code>http</code> в Go, т.к. наличие функции <code>w.FormDataContentType()</code> позволяет избежать большой головной боли при формирования тела для <code>multipart</code> запроса.</p>
+<p>Весь код вы можете найти на моем Github&#39;е:  <a href="https://github.com/kreshikhin/twitter-media-uploader">https://github.com/kreshikhin/twitter-media-uploader</a></p>
+<p>Официальное руководство на английском: <a href="https://dev.twitter.com/rest/reference/post/media/upload">https://dev.twitter.com/rest/reference/post/media/upload</a></p>
 </p></div></div><div id="disqus_thread"></div><script>/* * * CONFIGURATION VARIABLES * * */
 var disqus_shortname = 'kreshikhin';
 
